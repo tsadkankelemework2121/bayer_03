@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+:root {
+  /* === STRICT COMPANY PALETTE === */
+  --primary: #8ad424;
+  --primary-light: rgba(138, 212, 36, 0.10);
+  --primary-medium: rgba(138, 212, 36, 0.18);
+  --secondary: #00bdff;
+  --secondary-light: rgba(0, 189, 255, 0.10);
+  --black: #000000;
+
+  /* === NEUTRALS (greyscale only) === */
+  --bg-page: #f5f6f8;
+  --bg-card: #ffffff;
+  --border-card: #e4e7ec;
+  --border-hover: rgba(138, 212, 36, 0.45);
+  --text-primary: #000000;
+  --text-secondary: #1a1a1a;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --divider: #f0f1f3;
+
+  /* === SEMANTIC (risk only — minimal use) === */
+  --risk-high: #dc2626;
+  --risk-high-bg: rgba(220, 38, 38, 0.08);
+  --risk-medium: #d97706;
+  --risk-medium-bg: rgba(217, 119, 6, 0.08);
+  --risk-low-bg: rgba(138, 212, 36, 0.10);
+
+  /* === SPACING SCALE === */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px; /* Offset for the sticky header */
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #79be1e; }
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+.animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+.animate-scale-in { animation: scaleIn 0.4s ease-out both; }
+.animate-count-up { animation: countUp 0.4s ease-out both; }
+
+/* Stagger children */
+.stagger-children > * { animation: fadeInUp 0.4s ease-out both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.16s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.20s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.28s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.32s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.36s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.40s; }
+
+/* ========== CARD SYSTEM ========== */
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.dash-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 12px rgba(138, 212, 36, 0.08);
+}
+
+/* ========== SECTION TITLE ========== */
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* ========== METRIC CARD ========== */
+.metric-card {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.metric-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 12px rgba(138, 212, 36, 0.08);
+}
+.metric-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.metric-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ========== PROGRESS RING ========== */
+.progress-ring-circle-bg {
+  fill: none;
+  stroke: var(--divider);
+  stroke-width: 4;
+}
+.progress-ring-circle {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 1.2s ease-out;
+}
+
+/* ========== RISK BADGES ========== */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.risk-badge-high {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+}
+.risk-badge-medium {
+  background: var(--risk-medium-bg);
+  color: var(--risk-medium);
+}
+.risk-badge-low {
+  background: var(--risk-low-bg);
+  color: #5c8a1c;
+}
+
+/* ========== SCORE BAR ========== */
+.score-bar-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--divider);
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease-out;
+  background: var(--primary);
+}
+
+/* ========== TABLE ========== */
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.dashboard-table thead th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 12px var(--space-lg);
+  text-align: left;
+  border-bottom: 1px solid var(--border-card);
+  background: var(--bg-card);
+}
+.dashboard-table tbody td {
+  padding: 10px var(--space-lg);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--divider);
+}
+.dashboard-table tbody tr { transition: background 0.15s ease; }
+.dashboard-table tbody tr:hover { background: #fafbfc; }
+.dashboard-table tbody tr:last-child td { border-bottom: none; }
+
+/* ========== MEDALS ========== */
+.medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.medal-gold {
+  background: var(--primary);
+  color: #000000;
+}
+.medal-silver {
+  background: #e4e7ec;
+  color: #374151;
+}
+.medal-bronze {
+  background: #d4d4d4;
+  color: #374151;
+}
+.medal-default {
+  background: var(--divider);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ========== ACCENT DOT ========== */
+.accent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
