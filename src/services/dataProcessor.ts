@@ -41,7 +41,24 @@ function isWithinEthiopiaBounds(lat: number, lng: number): boolean {
   );
 }
 
+function getVehicleSpeed(v: Vehicle): number {
+  if (!v.routes || v.routes.length === 0) return 0;
+  return Math.max(...v.routes.map(r => r.speed || 0));
+}
+
 function isProhibitedZone(vehicle: Vehicle): boolean {
+  // If vehicle has routes, check if any route point is outside Ethiopia bounds
+  if (vehicle.routes && vehicle.routes.length > 0) {
+    return vehicle.routes.some(r => {
+      const lat = parseFloat(r.lat || '0');
+      const lng = parseFloat(r.lng || '0');
+      if (lat !== 0 && lng !== 0) {
+        return !isWithinEthiopiaBounds(lat, lng);
+      }
+      return false;
+    });
+  }
+
   // Check if vehicle is outside Ethiopia bounds (geofence violation)
   const lat = parseFloat(vehicle.lat || '0');
   const lng = parseFloat(vehicle.lng || '0');
@@ -62,7 +79,9 @@ function isProhibitedZone(vehicle: Vehicle): boolean {
 }
 
 export function processFleetData(vehicles: Vehicle[]): FleetData {
-  const speedLimit = 80; // Speed limit threshold: >= 80 km/h is overspeeding
+  const speedLimit = 80; // Speed limit lower threshold
+  const speedLimitUpper = 110; // Speed limit upper threshold
+  const isOverspeeding = (speed: number) => speed >= speedLimit && speed <= speedLimitUpper;
   const continuousDrivingThreshold = 360; // 6 hours in minutes
   const today = new Date();
   const monthName = today.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -70,23 +89,24 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate total vehicles
   const totalVehicles = vehicles.length;
 
-  // Calculate overspeeding vehicles (speed >= speedLimit)
+  // Calculate overspeeding vehicles (speed between 80 and 110)
   const overspeedingVehicles = vehicles.filter(v => {
-    const speed = parseFloat(v.speed || '0');
-    return speed >= speedLimit;
+    const speed = getVehicleSpeed(v);
+    return isOverspeeding(speed);
   }).length;
 
   // Calculate night driving vehicles (driving during night hours)
   const nightDrivingVehicles = vehicles.filter(v => {
-    const speed = parseFloat(v.speed || '0');
+    const speed = getVehicleSpeed(v);
     const isMoving = speed > 5;
-    const isDuringNight = isNightHours(v.dt_tracker || v.dt_server);
+    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
+    const isDuringNight = isNightHours(dt_tracker);
     return isMoving && isDuringNight;
   }).length;
 
   // Calculate continuous driving vehicles (driving for extended periods without breaks)
   const continuousDrivingVehicles = vehicles.filter(v => {
-    const speed = parseFloat(v.speed || '0');
+    const speed = getVehicleSpeed(v);
     const isMoving = speed > 5;
     const drivingTime = calculateContinuousDrivingTime(v.status || '');
     return isMoving && drivingTime > continuousDrivingThreshold;
@@ -94,7 +114,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
 
   // Calculate geofence/prohibited zone violations
   const prohibitedDrivingVehicles = vehicles.filter(v => {
-    const speed = parseFloat(v.speed || '0');
+    const speed = getVehicleSpeed(v);
     const isMoving = speed > 5;
     const inProhibited = isProhibitedZone(v);
     return isMoving && inProhibited;
@@ -103,11 +123,12 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate compliance percentages (vehicles with any violations)
   const violatingVehicles = new Set<string>();
   vehicles.forEach(v => {
-    const speed = parseFloat(v.speed || '0');
+    const speed = getVehicleSpeed(v);
     const isMoving = speed > 5;
+    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
     
-    if (isMoving && speed >= speedLimit) violatingVehicles.add(v.imei);
-    if (isMoving && isNightHours(v.dt_tracker || v.dt_server)) violatingVehicles.add(v.imei);
+    if (isMoving && isOverspeeding(speed)) violatingVehicles.add(v.imei);
+    if (isMoving && isNightHours(dt_tracker)) violatingVehicles.add(v.imei);
     if (isMoving && calculateContinuousDrivingTime(v.status || '') > continuousDrivingThreshold) violatingVehicles.add(v.imei);
     if (isMoving && isProhibitedZone(v)) violatingVehicles.add(v.imei);
   });
@@ -120,12 +141,17 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate speed monitoring metrics
   const speedData = vehicles
     .map(v => {
-      const speed = parseFloat(v.speed || '0');
+      const speed = getVehicleSpeed(v);
       const isMoving = speed > 5;
-      const isNightDrive = isMoving && isNightHours(v.dt_tracker || v.dt_server);
+      const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
+      const isNightDrive = isMoving && isNightHours(dt_tracker);
       const continuousTime = calculateContinuousDrivingTime(v.status || '');
       const isContinuous = isMoving && continuousTime > continuousDrivingThreshold;
       
+      const lastRoutePoint = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1] : null;
+      const latitude = lastRoutePoint ? parseFloat(lastRoutePoint.lat || '0') : parseFloat(v.lat || '0');
+      const longitude = lastRoutePoint ? parseFloat(lastRoutePoint.lng || '0') : parseFloat(v.lng || '0');
+
       return {
         vehicle: v.name,
         imei: v.imei,
@@ -134,8 +160,8 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
         nightDriving: isNightDrive,
         continuousDriving: isContinuous,
         continuousMinutes: continuousTime,
-        latitude: parseFloat(v.lat || '0'),
-        longitude: parseFloat(v.lng || '0'),
+        latitude,
+        longitude,
         isInProhibited: isMoving && isProhibitedZone(v),
       };
     })
@@ -150,7 +176,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   
   speedData.forEach(v => {
     let violations = 0;
-    if (v.speed >= speedLimit) violations += 10;
+    if (isOverspeeding(v.speed)) violations += 10;
     if (v.nightDriving) violations += 5;
     if (v.continuousDriving) violations += 8;
     if (v.isInProhibited) violations += 15;
@@ -163,7 +189,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
 
   // Build speed analysis data for chart - only vehicles with overspeeding violations
   const speedAnalysisData = speedData
-    .filter(v => v.speed >= speedLimit) // Only show overspeeding vehicles (>= 80 km/h)
+    .filter(v => isOverspeeding(v.speed)) // Only show overspeeding vehicles (80-110 km/h)
     .slice(0, 5)
     .map((v) => ({
       vehicle: v.vehicle, // Use plate number (vehicle name)
@@ -197,14 +223,14 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const violationsList = speedData
     .filter(v => {
       // Include if vehicle has any violation
-      return v.speed >= speedLimit || v.nightDriving || v.continuousDriving || v.isInProhibited;
+      return isOverspeeding(v.speed) || v.nightDriving || v.continuousDriving || v.isInProhibited;
     })
     .map((v) => {
       const prohibitedDuration = prohibitedData.find(p => p.vehicle === v.vehicle)?.duration || 0;
       const riskLevel: 'Low' | 'Medium' | 'High' =
-        v.speed > speedLimit + 20 || prohibitedDuration > 300
+        v.speed > 100 || prohibitedDuration > 300
           ? 'High'
-          : v.speed > speedLimit || prohibitedDuration > 100
+          : isOverspeeding(v.speed) || prohibitedDuration > 100
             ? 'Medium'
             : 'Low';
       return {
@@ -222,9 +248,9 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const topPerformers = vehicles
     .map((v) => ({
       vehicle: v.name,
-      speed: parseFloat(v.speed || '0'),
+      speed: getVehicleSpeed(v),
     }))
-    .filter(v => v.speed <= speedLimit)
+    .filter(v => v.speed < speedLimit)
     .sort((a, b) => a.speed - b.speed)
     .slice(0, 10)
     .map((v, index) => ({
