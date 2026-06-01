@@ -1,5 +1,5 @@
 import type { Vehicle } from './api';
-import type { FleetData } from '../data/mockData';
+import type { FleetData } from '../types/fleet';
 
 // Ethiopia geofence boundaries
 const ETHIOPIA_BOUNDS = {
@@ -79,9 +79,8 @@ function isProhibitedZone(vehicle: Vehicle): boolean {
 }
 
 export function processFleetData(vehicles: Vehicle[]): FleetData {
-  const speedLimit = 80; // Speed limit lower threshold
-  const speedLimitUpper = 110; // Speed limit upper threshold
-  const isOverspeeding = (speed: number) => speed >= speedLimit && speed <= speedLimitUpper;
+  const speedLimit = 110; // Speed limit threshold
+  const isOverspeeding = (speed: number) => speed > speedLimit;
   const continuousDrivingThreshold = 360; // 6 hours in minutes
   const today = new Date();
   const monthName = today.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -187,15 +186,26 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     }
   });
 
-  // Build speed analysis data for chart - only vehicles with overspeeding violations
+  // Build speed analysis data for chart - only vehicles with overspeeding violations (> 110 km/h)
   const speedAnalysisData = speedData
-    .filter(v => isOverspeeding(v.speed)) // Only show overspeeding vehicles (80-110 km/h)
-    .slice(0, 5)
-    .map((v) => ({
-      vehicle: v.vehicle, // Use plate number (vehicle name)
-      overspeedCount: Math.max(1, Math.round((v.speed - speedLimit) / 5)), // Count based on how much over limit
-      maxSpeed: Math.round(v.speed),
-    }));
+    .map((sd) => {
+      const v = vehicles.find((veh) => veh.imei === sd.imei);
+      const routes = v?.routes || [];
+      let overspeedCount = 0;
+      if (routes.length > 0) {
+        overspeedCount = routes.filter((r) => (r.speed || 0) > 110).length;
+      } else {
+        overspeedCount = sd.speed > 110 ? 1 : 0;
+      }
+      return {
+        vehicle: sd.vehicle,
+        overspeedCount,
+        maxSpeed: Math.round(sd.speed),
+      };
+    })
+    .filter((item) => item.overspeedCount > 0)
+    .sort((a, b) => b.overspeedCount - a.overspeedCount)
+    .slice(0, 10);
 
   // Calculate geofence violations (vehicles outside Ethiopia bounds)
   const prohibitedData = speedData
@@ -228,7 +238,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     .map((v) => {
       const prohibitedDuration = prohibitedData.find(p => p.vehicle === v.vehicle)?.duration || 0;
       const riskLevel: 'Low' | 'Medium' | 'High' =
-        v.speed > 100 || prohibitedDuration > 300
+        v.speed > 130 || prohibitedDuration > 300
           ? 'High'
           : isOverspeeding(v.speed) || prohibitedDuration > 100
             ? 'Medium'

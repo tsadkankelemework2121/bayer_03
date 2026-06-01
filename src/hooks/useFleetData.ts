@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchVehicles } from '../services/api';
 import { processFleetData } from '../services/dataProcessor';
-import type { FleetData } from '../data/mockData';
+import type { FleetData } from '../types/fleet';
 
 export function useFleetData() {
   return useQuery<FleetData>({

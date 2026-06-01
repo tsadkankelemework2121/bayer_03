@@ -1,5 +1,5 @@
 import { Car, Gauge, ShieldCheck, AlertTriangle, Moon, Zap } from "lucide-react";
-import type { FleetData } from "../../data/mockData";
+import type { FleetData } from "../../types/fleet";
 
 interface KPIGridProps {
   data: FleetData;

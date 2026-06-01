@@ -1,4 +1,4 @@
-import type { FleetData } from "../../data/mockData";
+import type { FleetData } from "../../types/fleet";
 import { Route, Timer } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 

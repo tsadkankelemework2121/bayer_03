@@ -1,4 +1,4 @@
-import type { FleetData } from "../../data/mockData";
+import type { FleetData } from "../../types/fleet";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
 } from "recharts";
