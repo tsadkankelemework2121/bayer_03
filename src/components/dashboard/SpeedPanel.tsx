@@ -1,6 +1,6 @@
 import type { FleetData } from "../../types/fleet";
 import { Zap, TrendingUp, ShieldAlert } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface SpeedPanelProps {
   data: FleetData;
@@ -58,7 +58,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'var(--space-md)' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
         
         {/* Left Chart: Max Speed */}
         <div className="dash-card" style={{ padding: 'var(--space-lg)' }}>
@@ -68,16 +68,16 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               <BarChart data={data.speedAnalysisData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="maxSpeedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00bdff" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#00bdff" stopOpacity={0.5} />
+                    <stop offset="0%" stopColor="#89D329" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#89D329" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
                 <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} />
-                <Tooltip cursor={{ fill: 'rgba(0, 189, 255, 0.06)' }}
+                <Tooltip cursor={{ fill: 'rgba(137, 211, 41, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                  itemStyle={{ color: '#00bdff' }} />
+                  itemStyle={{ color: '#89D329' }} />
                 <Bar dataKey="maxSpeed" name="Max Speed (km/h)" fill="url(#maxSpeedGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
@@ -92,23 +92,54 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               <BarChart data={data.speedAnalysisData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="speedCountGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.5} />
+                    <stop offset="0%" stopColor="#00BCFF" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#00BCFF" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
                 <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} />
-                <Tooltip cursor={{ fill: 'rgba(244, 63, 94, 0.06)' }}
+                <Tooltip cursor={{ fill: 'rgba(0, 188, 255, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                  itemStyle={{ color: '#f43f5e' }} />
+                  itemStyle={{ color: '#00BCFF' }} />
                 <Bar dataKey="overspeedCount" name="Events > 110 km/h" fill="url(#speedCountGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-
       </div>
+
+      {/* Comparison Chart */}
+      <div className="dash-card" style={{ padding: 'var(--space-lg)' }}>
+        <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Comparison: Max Speed vs Overspeed Count</h3>
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+          Green bars represent the maximum speed recorded in <strong>km/h</strong>. Blue bars represent the number of <strong>units</strong> (events) where the vehicle exceeded the 110 km/h limit.
+        </p>
+        <div style={{ height: '320px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.speedAnalysisData} margin={{ top: 16, right: 16, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
+              <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
+              <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} />
+              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={6} />
+              
+              <Tooltip 
+                cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
+                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
+                formatter={(value: number, name: string) => [
+                  `${value} ${name === 'Max Speed' ? 'km/h' : 'units'}`,
+                  name
+                ]}
+              />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              
+              <Bar yAxisId="left" dataKey="maxSpeed" name="Max Speed" fill="#89D329" radius={[4, 4, 0, 0]} barSize={24} />
+              <Bar yAxisId="right" dataKey="overspeedCount" name="Overspeed Count" fill="#00BCFF" radius={[4, 4, 0, 0]} barSize={24} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 }
