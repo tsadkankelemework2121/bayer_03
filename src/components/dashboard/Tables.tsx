@@ -39,7 +39,7 @@ export function Tables({ data }: TablesProps) {
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginLeft: '3px' }}>km/h</span>
                   </td>
                   <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {row.totalDistance.toLocaleString()}
+                    {row.totalDistance}
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem', marginLeft: '3px' }}>km</span>
                   </td>
                 </tr>

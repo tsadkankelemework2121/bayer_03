@@ -1,5 +1,5 @@
 import type { FleetData } from "../../types/fleet";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 
 interface NightDrivingPanelProps {
   data: FleetData;
@@ -40,7 +40,7 @@ export function NightDrivingPanel({ data }: NightDrivingPanelProps) {
             </h3>
             <div style={{ height: '300px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={chartData} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
+                <BarChart layout="vertical" data={chartData} margin={{ top: 8, right: 60, left: 8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="nightDrivingGradient" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#1e293b" stopOpacity={0.65} />
@@ -48,17 +48,16 @@ export function NightDrivingPanel({ data }: NightDrivingPanelProps) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e4e7ec" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(value) => `${value} min`} />
                   <YAxis dataKey="vehicle" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#000' }} width={95} />
                   <Tooltip
                     cursor={{ fill: 'rgba(30, 41, 59, 0.06)' }}
                     contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                    formatter={(value: any, name: any) => {
-                      if (name === 'Night Minutes') return [`${formatDuration(value as number)}`, name];
-                      return [value, name];
-                    }}
+                    formatter={(value: any) => [formatDuration(value as number), 'Duration']}
                   />
-                  <Bar dataKey="nightMinutes" name="Night Minutes" fill="url(#nightDrivingGradient)" radius={[0, 6, 6, 0]} barSize={20} />
+                  <Bar dataKey="nightMinutes" name="Night Minutes" fill="url(#nightDrivingGradient)" radius={[0, 6, 6, 0]} barSize={20}>
+                    <LabelList dataKey="nightMinutes" position="right" style={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} formatter={(val: any) => `${val} min`} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

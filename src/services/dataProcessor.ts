@@ -35,13 +35,13 @@ function parseDateLocal(dateStr: string): Date | null {
   }
 }
 
-function isTimeInNightHours(dateString: string): boolean {
-  const date = parseDateLocal(dateString);
-  if (!date || isNaN(date.getTime())) return false;
-  const hours = date.getHours();
-  // Night hours are 22:00 (10 PM) to 05:00 (5 AM)
-  return hours >= 22 || hours < 5;
-}
+// function isTimeInNightHours(dateString: string): boolean {
+//   const date = parseDateLocal(dateString);
+//   if (!date || isNaN(date.getTime())) return false;
+//   const hours = date.getHours();
+//   // Night hours are 22:00 (10 PM) to 05:00 (5 AM)
+//   return hours >= 22 || hours < 5;
+// }
 
 function isDriveDuringNight(dtStartStr: string, dtEndStr: string): boolean {
   const start = parseDateLocal(dtStartStr);
@@ -389,7 +389,6 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       totalDistance = typeof v.total_distance === 'number' ? v.total_distance : parseFloat(String(v.total_distance));
     }
     if (isNaN(totalDistance)) totalDistance = 0;
-    totalDistance = Math.round(totalDistance * 100) / 100;
     
     return {
       id: v.imei,

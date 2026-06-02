@@ -1,5 +1,5 @@
 import type { FleetData } from "../../types/fleet";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 
 interface ContinuousDrivingPanelProps {
   data: FleetData;
@@ -50,7 +50,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
             </h3>
             <div style={{ height: '320px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={chartData} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
+                <BarChart layout="vertical" data={chartData} margin={{ top: 8, right: 60, left: 8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="contDrivingGradient" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#8ad424" stopOpacity={0.7} />
@@ -58,14 +58,16 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e4e7ec" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(value) => `${value} km`} />
                   <YAxis dataKey="vehicle" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#000' }} width={95} />
                   <Tooltip
                     cursor={{ fill: 'rgba(138, 212, 36, 0.06)' }}
                     contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                    formatter={(value: any, name: any) => [`${value} km`, name]}
+                    formatter={(value: any) => [value, 'Length']}
                   />
-                  <Bar dataKey="routeLength" name="Route Length" fill="url(#contDrivingGradient)" radius={[0, 6, 6, 0]} barSize={20} />
+                  <Bar dataKey="routeLength" name="Route Length" fill="url(#contDrivingGradient)" radius={[0, 6, 6, 0]} barSize={20}>
+                    <LabelList dataKey="routeLength" position="right" style={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} formatter={(val: any) => `${val} km`} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

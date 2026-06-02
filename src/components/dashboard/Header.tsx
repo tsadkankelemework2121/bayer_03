@@ -7,6 +7,7 @@ interface HeaderProps {
 }
 
 export function Header({ organization, title, month }: HeaderProps) {
+  const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
   const navLinks = [
     { name: 'Overview', href: '#overview' },
     { name: 'Speed', href: '#speed' },
@@ -88,21 +89,20 @@ export function Header({ organization, title, month }: HeaderProps) {
         <div
           className="flex items-center shrink-0"
           style={{
-            gap: '8px',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            background: 'var(--primary-light)',
-            border: '1px solid rgba(138, 212, 36, 0.2)',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            background: '#f4f4f5',
+            border: '1px solid #e4e4e7',
           }}
         >
           <span
             style={{
-              fontSize: '0.8rem',
+              fontSize: '0.78rem',
               fontWeight: 600,
-              color: 'var(--text-primary)',
+              color: '#27272a',
             }}
           >
-            {month}
+            {currentMonth}
           </span>
         </div>
       </div>
