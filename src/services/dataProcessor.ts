@@ -356,7 +356,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     .map((v) => ({
       vehicle: v.vehicle, // Use plate number (vehicle name)
       duration: Math.round(parseDurationToMinutes(vehicles.find(vehicle => vehicle.imei === v.imei)?.status || '') || 0),
-      distance: parseFloat(vehicles.find(vehicle => vehicle.imei === v.imei)?.odometer || '0'), // Use odometer if available
+      distance: parseFloat(String(vehicles.find(vehicle => vehicle.imei === v.imei)?.odometer || '0').replace(/,/g, '')), // Remove commas before parsing
     }));
 
   const worstProhibitedVehicle = prohibitedData[0]?.vehicle || 'N/A';
@@ -386,7 +386,12 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     // Total distance: from total_distance field
     let totalDistance = 0;
     if (v.total_distance !== undefined && v.total_distance !== null) {
-      totalDistance = typeof v.total_distance === 'number' ? v.total_distance : parseFloat(String(v.total_distance));
+      if (typeof v.total_distance === 'number') {
+        totalDistance = v.total_distance;
+      } else {
+        const cleanStr = String(v.total_distance).replace(/,/g, '');
+        totalDistance = parseFloat(cleanStr);
+      }
     }
     if (isNaN(totalDistance)) totalDistance = 0;
     

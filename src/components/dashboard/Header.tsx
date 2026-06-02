@@ -3,10 +3,9 @@ import logo from "../../assets/image.png";
 interface HeaderProps {
   organization: string;
   title: string;
-  month: string;
 }
 
-export function Header({ organization, title, month }: HeaderProps) {
+export function Header({ organization, title }: HeaderProps) {
   const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
   const navLinks = [
     { name: 'Overview', href: '#overview' },
