@@ -10,15 +10,99 @@ const ETHIOPIA_BOUNDS = {
 };
 
 // Helper functions for new metrics
-function isNightHours(dateString: string): boolean {
+function parseDateLocal(dateStr: string): Date | null {
   try {
-    const date = new Date(dateString);
-    const hours = date.getHours();
-    // Night hours: 20:00 (8 PM) to 06:00 (6 AM)
-    return hours >= 20 || hours < 6;
+    if (!dateStr) return null;
+    const normalized = dateStr.replace(/\//g, '-').replace('T', ' ');
+    const parts = normalized.split(' ');
+    if (parts.length < 2) return new Date(dateStr);
+    const dateParts = parts[0].split('-');
+    const timeParts = parts[1].split(':');
+    
+    let year = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10) - 1; // 0-based
+    const day = parseInt(dateParts[2], 10);
+    
+    if (year < 100) year += 2000;
+    
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+    const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+    
+    return new Date(year, month, day, hours, minutes, seconds);
   } catch {
-    return false;
+    return null;
   }
+}
+
+function isTimeInNightHours(dateString: string): boolean {
+  const date = parseDateLocal(dateString);
+  if (!date || isNaN(date.getTime())) return false;
+  const hours = date.getHours();
+  // Night hours are 22:00 (10 PM) to 05:00 (5 AM)
+  return hours >= 22 || hours < 5;
+}
+
+function isDriveDuringNight(dtStartStr: string, dtEndStr: string): boolean {
+  const start = parseDateLocal(dtStartStr);
+  const end = parseDateLocal(dtEndStr);
+  if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return false;
+  
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  
+  let tempDay = new Date(startDay);
+  tempDay.setDate(tempDay.getDate() - 1);
+  
+  const endLimit = new Date(endDay);
+  endLimit.setDate(endLimit.getDate() + 1);
+  
+  const tStart = start.getTime();
+  const tEnd = end.getTime();
+  
+  while (tempDay <= endLimit) {
+    const y = tempDay.getFullYear();
+    const m = tempDay.getMonth();
+    const d = tempDay.getDate();
+    
+    const nightStart = new Date(y, m, d, 22, 0, 0).getTime();
+    const nextDay = new Date(y, m, d + 1);
+    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 5, 0, 0).getTime();
+    
+    const overlapStart = Math.max(tStart, nightStart);
+    const overlapEnd = Math.min(tEnd, nightEnd);
+    
+    if (overlapStart < overlapEnd) {
+      return true;
+    }
+    tempDay.setDate(tempDay.getDate() + 1);
+  }
+  
+  return false;
+}
+
+function hasNightDrive(v: Vehicle): boolean {
+  // 1. If drives exist, check overlap
+  if (v.drives && v.drives.length > 0) {
+    return v.drives.some(d => isDriveDuringNight(d.dt_start, d.dt_end));
+  }
+  
+  // 2. Fallback to routes
+  if (v.routes && v.routes.length > 0) {
+    return v.routes.some(r => (r.speed || 0) > 5 && isTimeInNightHours(r.dt_tracker));
+  }
+  
+  // 3. Fallback to tracker status
+  const speed = getVehicleSpeed(v);
+  const isMoving = speed > 5;
+  if (isMoving) {
+    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
+    if (dt_tracker && isTimeInNightHours(dt_tracker)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 function calculateContinuousDrivingTime(status: string): number {
@@ -94,14 +178,8 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isOverspeeding(speed);
   }).length;
 
-  // Calculate night driving vehicles (driving during night hours)
-  const nightDrivingVehicles = vehicles.filter(v => {
-    const speed = getVehicleSpeed(v);
-    const isMoving = speed > 5;
-    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
-    const isDuringNight = isNightHours(dt_tracker);
-    return isMoving && isDuringNight;
-  }).length;
+  // Calculate night driving vehicles (driving during night hours: 22:00 to 05:00)
+  const nightDrivingVehicles = vehicles.filter(v => hasNightDrive(v)).length;
 
   // Calculate continuous driving vehicles (driving for extended periods without breaks)
   const continuousDrivingVehicles = vehicles.filter(v => {
@@ -124,10 +202,9 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   vehicles.forEach(v => {
     const speed = getVehicleSpeed(v);
     const isMoving = speed > 5;
-    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
     
     if (isMoving && isOverspeeding(speed)) violatingVehicles.add(v.imei);
-    if (isMoving && isNightHours(dt_tracker)) violatingVehicles.add(v.imei);
+    if (hasNightDrive(v)) violatingVehicles.add(v.imei);
     if (isMoving && calculateContinuousDrivingTime(v.status || '') > continuousDrivingThreshold) violatingVehicles.add(v.imei);
     if (isMoving && isProhibitedZone(v)) violatingVehicles.add(v.imei);
   });
@@ -142,8 +219,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     .map(v => {
       const speed = getVehicleSpeed(v);
       const isMoving = speed > 5;
-      const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
-      const isNightDrive = isMoving && isNightHours(dt_tracker);
+      const isNightDrive = hasNightDrive(v);
       const continuousTime = calculateContinuousDrivingTime(v.status || '');
       const isContinuous = isMoving && continuousTime > continuousDrivingThreshold;
       
