@@ -126,7 +126,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               <Tooltip 
                 cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                formatter={(value: number, name: string) => [
+                formatter={(value: any, name: any) => [
                   `${value} ${name === 'Max Speed' ? 'km/h' : 'units'}`,
                   name
                 ]}

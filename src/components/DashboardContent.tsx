@@ -4,6 +4,7 @@ import { KPIGrid } from './dashboard/KPIGrid';
 import { SpeedPanel } from './dashboard/SpeedPanel';
 import { ProhibitedPanel } from './dashboard/ProhibitedPanel';
 import { Charts } from './dashboard/Charts';
+import { DistancePanel } from './dashboard/DistancePanel';
 import { Tables } from './dashboard/Tables';
 
 export function DashboardContent() {
@@ -112,6 +113,10 @@ export function DashboardContent() {
 
         <section id="prohibited" className="scroll-mt-[100px]">
           <ProhibitedPanel data={data} />
+        </section>
+
+        <section id="distance" className="scroll-mt-[100px]">
+          <DistancePanel data={data} />
         </section>
 
         <section id="violations" className="scroll-mt-[100px]">

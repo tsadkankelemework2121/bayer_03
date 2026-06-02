@@ -1,4 +1,4 @@
-import type { FleetData, RiskLevel } from "../../types/fleet";
+import type { FleetData } from "../../types/fleet";
 import { Trophy } from "lucide-react";
 
 interface TablesProps {

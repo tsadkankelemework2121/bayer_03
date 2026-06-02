@@ -35,6 +35,7 @@ export interface FleetData {
   speedAnalysisData: { vehicle: string; overspeedCount: number; maxSpeed: number }[];
   complianceData: { name: string; value: number; color: string }[];
   prohibitedData: { vehicle: string; duration: number; distance: number }[];
+  distanceData: { vehicle: string; distance: number; formattedDistance: string }[];
 
   // Table Data
   violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number; riskLevel: RiskLevel }[];
