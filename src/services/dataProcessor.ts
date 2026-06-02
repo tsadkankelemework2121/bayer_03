@@ -105,15 +105,56 @@ function hasNightDrive(v: Vehicle): boolean {
   return false;
 }
 
-function calculateContinuousDrivingTime(status: string): number {
-  // Parse status string like "Stopped 17 h 38 min 14 s" or "Driving 2 h 30 min"
-  const match = status.match(/(\d+)\s*h\s*(\d+)\s*min/);
-  if (match) {
-    const hours = parseInt(match[1]);
-    const minutes = parseInt(match[2]);
-    return hours * 60 + minutes; // Return total minutes
+function parseDurationToMinutes(durationStr: string): number {
+  // Parse duration like "10 h 10 min 20 s", "2 h 30 min", "45 min 10 s", etc.
+  if (!durationStr) return 0;
+  let totalMinutes = 0;
+  const hMatch = durationStr.match(/(\d+)\s*h/);
+  const mMatch = durationStr.match(/(\d+)\s*min/);
+  const sMatch = durationStr.match(/(\d+)\s*s/);
+  if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
+  if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
+  if (sMatch) totalMinutes += parseInt(sMatch[1], 10) / 60;
+  return totalMinutes;
+}
+
+function calculateNightOverlapMinutes(dtStartStr: string, dtEndStr: string): number {
+  const start = parseDateLocal(dtStartStr);
+  const end = parseDateLocal(dtEndStr);
+  if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+  let tempDay = new Date(startDay);
+  tempDay.setDate(tempDay.getDate() - 1);
+
+  const endLimit = new Date(endDay);
+  endLimit.setDate(endLimit.getDate() + 1);
+
+  const tStart = start.getTime();
+  const tEnd = end.getTime();
+  let totalOverlapMs = 0;
+
+  while (tempDay <= endLimit) {
+    const y = tempDay.getFullYear();
+    const m = tempDay.getMonth();
+    const d = tempDay.getDate();
+
+    const nightStart = new Date(y, m, d, 22, 0, 0).getTime();
+    const nextDay = new Date(y, m, d + 1);
+    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 5, 0, 0).getTime();
+
+    const overlapStart = Math.max(tStart, nightStart);
+    const overlapEnd = Math.min(tEnd, nightEnd);
+
+    if (overlapStart < overlapEnd) {
+      totalOverlapMs += overlapEnd - overlapStart;
+    }
+    tempDay.setDate(tempDay.getDate() + 1);
   }
-  return 0;
+
+  return Math.round(totalOverlapMs / 60000); // convert ms to minutes
 }
 
 function isWithinEthiopiaBounds(lat: number, lng: number): boolean {
@@ -165,14 +206,14 @@ function isProhibitedZone(vehicle: Vehicle): boolean {
 export function processFleetData(vehicles: Vehicle[]): FleetData {
   const speedLimit = 110; // Speed limit threshold
   const isOverspeeding = (speed: number) => speed > speedLimit;
-  const continuousDrivingThreshold = 360; // 6 hours in minutes
+  const continuousDrivingThreshold = 120; // 2 hours in minutes
   const today = new Date();
   const monthName = today.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   // Calculate total vehicles
   const totalVehicles = vehicles.length;
 
-  // Calculate overspeeding vehicles (speed between 80 and 110)
+  // Calculate overspeeding vehicles (speed > 110)
   const overspeedingVehicles = vehicles.filter(v => {
     const speed = getVehicleSpeed(v);
     return isOverspeeding(speed);
@@ -181,12 +222,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate night driving vehicles (driving during night hours: 22:00 to 05:00)
   const nightDrivingVehicles = vehicles.filter(v => hasNightDrive(v)).length;
 
-  // Calculate continuous driving vehicles (driving for extended periods without breaks)
+  // Calculate continuous driving vehicles (any drive with duration > 120 min from drives block)
   const continuousDrivingVehicles = vehicles.filter(v => {
-    const speed = getVehicleSpeed(v);
-    const isMoving = speed > 5;
-    const drivingTime = calculateContinuousDrivingTime(v.status || '');
-    return isMoving && drivingTime > continuousDrivingThreshold;
+    if (!v.drives || v.drives.length === 0) return false;
+    return v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold);
   }).length;
 
   // Calculate geofence/prohibited zone violations
@@ -201,14 +240,59 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const nonCompliantPercent = totalVehicles > 0 ? Math.round((overspeedingVehicles / totalVehicles) * 100) : 0;
   const compliantPercent = totalVehicles > 0 ? 100 - nonCompliantPercent : 0;
 
+  // Build continuous driving list from drives block (duration > 120 min)
+  const continuousDrivingList: FleetData['continuousDrivingList'] = [];
+  vehicles.forEach(v => {
+    if (!v.drives || v.drives.length === 0) return;
+    v.drives.forEach(d => {
+      const mins = parseDurationToMinutes(d.duration);
+      if (mins > continuousDrivingThreshold) {
+        continuousDrivingList.push({
+          vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
+          duration: d.duration,
+          durationMinutes: Math.round(mins),
+          routeLength: d.route_length || 0,
+        });
+      }
+    });
+  });
+  continuousDrivingList.sort((a, b) => b.durationMinutes - a.durationMinutes);
+
+  // Build night driving list from drives that overlap 22:00–05:00
+  const nightDrivingMap = new Map<string, { vehicle: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();
+  vehicles.forEach(v => {
+    if (!v.drives || v.drives.length === 0) return;
+    const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
+    v.drives.forEach(d => {
+      if (isDriveDuringNight(d.dt_start, d.dt_end)) {
+        const overlap = calculateNightOverlapMinutes(d.dt_start, d.dt_end);
+        if (overlap > 0) {
+          if (!nightDrivingMap.has(v.imei)) {
+            nightDrivingMap.set(v.imei, { vehicle: vName, drives: [] });
+          }
+          nightDrivingMap.get(v.imei)!.drives.push({
+            dtStart: d.dt_start,
+            dtEnd: d.dt_end,
+            overlapMinutes: overlap,
+          });
+        }
+      }
+    });
+  });
+  const nightDrivingList: FleetData['nightDrivingList'] = Array.from(nightDrivingMap.values()).map(entry => ({
+    vehicle: entry.vehicle,
+    nightDriveCount: entry.drives.length,
+    totalNightMinutes: entry.drives.reduce((sum, d) => sum + d.overlapMinutes, 0),
+    drives: entry.drives,
+  })).sort((a, b) => b.totalNightMinutes - a.totalNightMinutes);
+
   // Calculate speed monitoring metrics
   const speedData = vehicles
     .map(v => {
       const speed = getVehicleSpeed(v);
       const isMoving = speed > 5;
       const isNightDrive = hasNightDrive(v);
-      const continuousTime = calculateContinuousDrivingTime(v.status || '');
-      const isContinuous = isMoving && continuousTime > continuousDrivingThreshold;
+      const hasContinuous = v.drives ? v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold) : false;
       
       const lastRoutePoint = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1] : null;
       const latitude = lastRoutePoint ? parseFloat(lastRoutePoint.lat || '0') : parseFloat(v.lat || '0');
@@ -220,8 +304,8 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
         speed,
         isMoving,
         nightDriving: isNightDrive,
-        continuousDriving: isContinuous,
-        continuousMinutes: continuousTime,
+        continuousDriving: hasContinuous,
+        continuousMinutes: 0,
         latitude,
         longitude,
         isInProhibited: isMoving && isProhibitedZone(v),
@@ -276,7 +360,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     .slice(0, 5)
     .map((v) => ({
       vehicle: v.vehicle, // Use plate number (vehicle name)
-      duration: Math.round(calculateContinuousDrivingTime(vehicles.find(vehicle => vehicle.imei === v.imei)?.status || '') || 0),
+      duration: Math.round(parseDurationToMinutes(vehicles.find(vehicle => vehicle.imei === v.imei)?.status || '') || 0),
       distance: parseFloat(vehicles.find(vehicle => vehicle.imei === v.imei)?.odometer || '0'), // Use odometer if available
     }));
 
@@ -416,6 +500,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     // Event Data
     totalEventsCount,
     eventsList: parsedEvents,
+
+    // Continuous Driving & Night Driving lists
+    continuousDrivingList,
+    nightDrivingList,
 
     // Table Data
     violationsList,

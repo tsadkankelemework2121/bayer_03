@@ -2,7 +2,8 @@ import { useFleetData } from '../hooks/useFleetData';
 import { Header } from './dashboard/Header';
 import { KPIGrid } from './dashboard/KPIGrid';
 import { SpeedPanel } from './dashboard/SpeedPanel';
-import { ProhibitedPanel } from './dashboard/ProhibitedPanel';
+import { ContinuousDrivingPanel } from './dashboard/ContinuousDrivingPanel';
+import { NightDrivingPanel } from './dashboard/NightDrivingPanel';
 import { Charts } from './dashboard/Charts';
 import { DistancePanel } from './dashboard/DistancePanel';
 import { EventsPanel } from './dashboard/EventsPanel';
@@ -112,8 +113,12 @@ export function DashboardContent() {
           <Charts data={data} />
         </section>
 
-        <section id="prohibited" className="scroll-mt-[100px]">
-          <ProhibitedPanel data={data} />
+        <section id="continuous-driving" className="scroll-mt-[100px]">
+          <ContinuousDrivingPanel data={data} />
+        </section>
+
+        <section id="night-driving" className="scroll-mt-[100px]">
+          <NightDrivingPanel data={data} />
         </section>
 
         <section id="distance" className="scroll-mt-[100px]">
@@ -131,3 +136,4 @@ export function DashboardContent() {
     </>
   );
 }
+

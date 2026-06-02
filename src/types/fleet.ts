@@ -38,6 +38,22 @@ export interface FleetData {
   totalEventsCount: number;
   eventsList: { id: string; vehicle: string; type: string; time: string; details: string }[];
 
+  // Continuous Driving Data (drives with duration > 120 min)
+  continuousDrivingList: {
+    vehicle: string;
+    duration: string;
+    durationMinutes: number;
+    routeLength: number;
+  }[];
+
+  // Night Driving Data (drives overlapping 22:00–05:00)
+  nightDrivingList: {
+    vehicle: string;
+    nightDriveCount: number;
+    totalNightMinutes: number;
+    drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[];
+  }[];
+
   // Table Data
   violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number }[];
   topPerformers: { vehicle: string; score: number }[];
