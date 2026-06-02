@@ -1,5 +1,4 @@
 import type { FleetData } from "../../types/fleet";
-import { Trophy } from "lucide-react";
 
 interface TablesProps {
   data: FleetData;
@@ -64,7 +63,6 @@ export function Tables({ data }: TablesProps) {
         <div>
           <div className="section-title flex items-center" style={{ gap: '8px' }}>
             <span>Top 10 Best Performers</span>
-            <Trophy style={{ width: '14px', height: '14px', color: 'var(--primary)' }} />
           </div>
           <div className="dash-card overflow-hidden">
             <div className="overflow-x-auto">

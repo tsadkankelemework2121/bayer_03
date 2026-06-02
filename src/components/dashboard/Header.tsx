@@ -1,4 +1,3 @@
-import { Calendar } from "lucide-react";
 import logo from "../../assets/image.png";
 
 interface HeaderProps {
@@ -13,6 +12,8 @@ export function Header({ organization, title, month }: HeaderProps) {
     { name: 'Speed', href: '#speed' },
     { name: 'Compliance', href: '#compliance' },
     { name: 'Prohibited', href: '#prohibited' },
+    { name: 'Distance', href: '#distance' },
+    { name: 'Events', href: '#events' },
     { name: 'Violations', href: '#violations' },
   ];
 
@@ -94,7 +95,6 @@ export function Header({ organization, title, month }: HeaderProps) {
             border: '1px solid rgba(138, 212, 36, 0.2)',
           }}
         >
-          <Calendar style={{ width: '14px', height: '14px', color: 'var(--primary)' }} />
           <span
             style={{
               fontSize: '0.8rem',

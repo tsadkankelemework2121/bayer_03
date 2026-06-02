@@ -379,6 +379,25 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     };
   }).sort((a, b) => b.distance - a.distance);
 
+  // Extract all vehicle events safely
+  const parsedEvents = vehicles.flatMap(v => {
+    const rawEvents = v.events || [];
+    return rawEvents.map((e, idx) => {
+      const type = String(e.event || e.type || e.event_desc || 'Alert');
+      const time = String(e.dt_tracker || e.dt_server || e.time || 'N/A');
+      const details = String(e.details || (e.speed ? `Recorded Speed: ${e.speed} km/h` : 'System generated alert'));
+      return {
+        id: `${v.imei}-${idx}-${time}`,
+        vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
+        type,
+        time,
+        details,
+      };
+    });
+  }).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+  const totalEventsCount = parsedEvents.length;
+
   return {
     title: 'Fleet Safety & Compliance Report',
     month: monthName,
@@ -415,6 +434,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     complianceData,
     prohibitedData,
     distanceData: processedDistanceData,
+
+    // Event Data
+    totalEventsCount,
+    eventsList: parsedEvents,
 
     // Table Data
     violationsList,

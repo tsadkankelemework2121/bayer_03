@@ -5,6 +5,7 @@ import { SpeedPanel } from './dashboard/SpeedPanel';
 import { ProhibitedPanel } from './dashboard/ProhibitedPanel';
 import { Charts } from './dashboard/Charts';
 import { DistancePanel } from './dashboard/DistancePanel';
+import { EventsPanel } from './dashboard/EventsPanel';
 import { Tables } from './dashboard/Tables';
 
 export function DashboardContent() {
@@ -117,6 +118,10 @@ export function DashboardContent() {
 
         <section id="distance" className="scroll-mt-[100px]">
           <DistancePanel data={data} />
+        </section>
+
+        <section id="events" className="scroll-mt-[100px]">
+          <EventsPanel data={data} />
         </section>
 
         <section id="violations" className="scroll-mt-[100px]">

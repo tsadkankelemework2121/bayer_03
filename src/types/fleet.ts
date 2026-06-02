@@ -37,6 +37,10 @@ export interface FleetData {
   prohibitedData: { vehicle: string; duration: number; distance: number }[];
   distanceData: { vehicle: string; distance: number; formattedDistance: string }[];
 
+  // Event Data
+  totalEventsCount: number;
+  eventsList: { id: string; vehicle: string; type: string; time: string; details: string }[];
+
   // Table Data
   violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number; riskLevel: RiskLevel }[];
   topPerformers: { vehicle: string; score: number }[];

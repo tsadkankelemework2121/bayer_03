@@ -1,5 +1,4 @@
 import type { FleetData } from "../../types/fleet";
-import { Route, Timer } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ProhibitedPanelProps {
@@ -51,9 +50,6 @@ export function ProhibitedPanel({ data }: ProhibitedPanelProps) {
                 </p>
                 <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.worstProhibitedDistanceVehicle}</span></p>
               </div>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--primary-light)' }}>
-                <Route style={{ width: '18px', height: '18px', color: 'var(--primary)' }} />
-              </div>
             </div>
             <div style={{ marginTop: '12px' }}>
               <div className="score-bar-track">
@@ -68,9 +64,6 @@ export function ProhibitedPanel({ data }: ProhibitedPanelProps) {
                 <p className="metric-value">{formatDuration(data.worstProhibitedDuration)}</p>
                 <p className="metric-sub"><span style={{ color: 'var(--text-muted)' }}>{data.worstProhibitedDuration} minutes total</span></p>
                 <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.worstProhibitedVehicle}</span></p>
-              </div>
-              <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--primary-light)' }}>
-                <Timer style={{ width: '18px', height: '18px', color: 'var(--primary)' }} />
               </div>
             </div>
             <div style={{ marginTop: '12px' }}>

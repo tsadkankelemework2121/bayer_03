@@ -1,5 +1,4 @@
 import type { FleetData } from "../../types/fleet";
-import { Zap, TrendingUp, ShieldAlert } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface SpeedPanelProps {
@@ -16,28 +15,22 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
         <div className="metric-card" style={{ borderLeft: '3px solid var(--primary)' }}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="metric-label">Highest Top Speed</p>
+              <p className="metric-label">Highest Speed Recorded</p>
               <p className="metric-value">
                 {data.maxSpeed}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km/h</span>
               </p>
               <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.maxSpeedVehicle}</span></p>
-            </div>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--primary-light)' }}>
-              <Zap style={{ width: '18px', height: '18px', color: 'var(--primary)' }} />
             </div>
           </div>
         </div>
         <div className="metric-card" style={{ borderLeft: '3px solid var(--primary)' }}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="metric-label">Most Overspeed Events</p>
+              <p className="metric-label">Total Events Count</p>
               <p className="metric-value">
-                {data.topViolatorEvents}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>events</span>
+                {data.totalEventsCount}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>events</span>
               </p>
-              <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.topViolator}</span></p>
-            </div>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--primary-light)' }}>
-              <TrendingUp style={{ width: '18px', height: '18px', color: 'var(--primary)' }} />
+              <p className="metric-sub">Across all vehicles</p>
             </div>
           </div>
         </div>
@@ -49,9 +42,6 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 {data.speedLimit}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km/h</span>
               </p>
               <p className="metric-sub">Company policy benchmark</p>
-            </div>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'var(--primary-light)' }}>
-              <ShieldAlert style={{ width: '18px', height: '18px', color: 'var(--primary)' }} />
             </div>
           </div>
         </div>

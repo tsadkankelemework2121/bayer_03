@@ -1,5 +1,4 @@
 import type { FleetData } from "../../types/fleet";
-import { Milestone, Trophy, Route } from "lucide-react";
 
 interface DistancePanelProps {
   data: FleetData;
@@ -20,7 +19,6 @@ export function DistancePanel({ data }: DistancePanelProps) {
     <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
       <div className="section-title flex items-center" style={{ gap: '8px' }}>
         <span>Fleet Distance Tracker</span>
-        <Milestone style={{ width: '16px', height: '16px', color: 'var(--primary)' }} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
@@ -43,7 +41,6 @@ export function DistancePanel({ data }: DistancePanelProps) {
             <div>
               <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Longest Journey</span>
-                <Trophy style={{ width: '18px', height: '18px', color: '#89D329' }} />
               </div>
               <p style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {topVehicle?.distance.toLocaleString()}<span style={{ fontSize: '0.9rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km</span>
@@ -76,7 +73,6 @@ export function DistancePanel({ data }: DistancePanelProps) {
             <div>
               <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Fleet Distance</span>
-                <Route style={{ width: '18px', height: '18px', color: '#00BCFF' }} />
               </div>
               <p style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {totalFleetDistance.toLocaleString()}<span style={{ fontSize: '0.9rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km</span>
