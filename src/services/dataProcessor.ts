@@ -197,22 +197,9 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isMoving && inProhibited;
   }).length;
 
-  // Calculate compliance percentages (vehicles with any violations)
-  const violatingVehicles = new Set<string>();
-  vehicles.forEach(v => {
-    const speed = getVehicleSpeed(v);
-    const isMoving = speed > 5;
-    
-    if (isMoving && isOverspeeding(speed)) violatingVehicles.add(v.imei);
-    if (hasNightDrive(v)) violatingVehicles.add(v.imei);
-    if (isMoving && calculateContinuousDrivingTime(v.status || '') > continuousDrivingThreshold) violatingVehicles.add(v.imei);
-    if (isMoving && isProhibitedZone(v)) violatingVehicles.add(v.imei);
-  });
-
-  const compliantVehicles = totalVehicles - violatingVehicles.size;
-  const compliantPercent = totalVehicles > 0 ? Math.round((compliantVehicles / totalVehicles) * 100) : 0;
-  const nonCompliantPercent = totalVehicles > 0 ? Math.round((violatingVehicles.size / totalVehicles) * 100) : 0;
-  const highRiskPercent = totalVehicles > 0 ? Math.round(((prohibitedDrivingVehicles + continuousDrivingVehicles) / totalVehicles) * 100) : 0;
+  // Calculate compliance percentages strictly based on Speed Compliance (speed > 110 km/h)
+  const nonCompliantPercent = totalVehicles > 0 ? Math.round((overspeedingVehicles / totalVehicles) * 100) : 0;
+  const compliantPercent = totalVehicles > 0 ? 100 - nonCompliantPercent : 0;
 
   // Calculate speed monitoring metrics
   const speedData = vehicles
@@ -302,7 +289,6 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const complianceData = [
     { name: 'Compliant', value: compliantPercent, color: '#8ad424' },
     { name: 'Non-Compliant', value: nonCompliantPercent, color: '#000000' },
-    { name: 'High Risk', value: highRiskPercent, color: '#00bdff' },
   ];
 
   // Build violations list - only include vehicles with violations
@@ -313,19 +299,12 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     })
     .map((v) => {
       const prohibitedDuration = prohibitedData.find(p => p.vehicle === v.vehicle)?.duration || 0;
-      const riskLevel: 'Low' | 'Medium' | 'High' =
-        v.speed > 130 || prohibitedDuration > 300
-          ? 'High'
-          : isOverspeeding(v.speed) || prohibitedDuration > 100
-            ? 'Medium'
-            : 'Low';
       return {
         id: v.imei,
         vehicle: v.vehicle,
         overspeedCount: speedAnalysisData.find(s => s.vehicle === v.vehicle)?.overspeedCount || 0,
         maxSpeed: Math.round(v.speed),
         prohibitedDuration,
-        riskLevel,
       };
     })
     .slice(0, 5);
@@ -408,13 +387,12 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     overspeedingVehicles,
     prohibitedDrivingVehicles,
     compliantPercent,
-    highRiskPercent,
     nonCompliantPercent,
     
     // New KPIs for requested metrics
     nightDrivingVehicles,
     continuousDrivingVehicles,
-    complianceViolatingVehicles: violatingVehicles.size,
+    complianceViolatingVehicles: overspeedingVehicles,
 
     // Speed Monitoring
     maxSpeed: Math.round(maxSpeed),

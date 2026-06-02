@@ -1,5 +1,3 @@
-export type RiskLevel = "Low" | "Medium" | "High";
-
 export interface FleetData {
   title: string;
   month: string;
@@ -10,7 +8,6 @@ export interface FleetData {
   overspeedingVehicles: number;
   prohibitedDrivingVehicles: number;
   compliantPercent: number;
-  highRiskPercent: number;
   nonCompliantPercent: number;
   
   // New KPIs for compliance tracking
@@ -42,6 +39,6 @@ export interface FleetData {
   eventsList: { id: string; vehicle: string; type: string; time: string; details: string }[];
 
   // Table Data
-  violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number; riskLevel: RiskLevel }[];
+  violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number }[];
   topPerformers: { vehicle: string; score: number }[];
 }

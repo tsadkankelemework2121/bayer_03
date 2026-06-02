@@ -27,7 +27,6 @@ export function Tables({ data }: TablesProps) {
                     <th>Overspeed Events</th>
                     <th>Max Speed</th>
                     <th>Prohibited (mins)</th>
-                    <th>Risk Level</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,20 +36,6 @@ export function Tables({ data }: TablesProps) {
                       <td style={{ fontWeight: 500 }}>{row.overspeedCount}</td>
                       <td style={{ fontWeight: 500 }}>{row.maxSpeed} <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>km/h</span></td>
                       <td style={{ fontWeight: 500 }}>{row.prohibitedDuration}</td>
-                      <td>
-                        <span className={`risk-badge risk-badge-${row.riskLevel.toLowerCase()}`}>
-                          <span
-                            className="accent-dot"
-                            style={{
-                              backgroundColor:
-                                row.riskLevel === 'High' ? 'var(--risk-high)' :
-                                row.riskLevel === 'Medium' ? 'var(--risk-medium)' :
-                                'var(--primary)',
-                            }}
-                          />
-                          {row.riskLevel}
-                        </span>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
