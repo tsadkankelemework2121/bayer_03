@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import logo from "../../assets/image.png";
+import { exportDashboardToPdf } from '../../lib/exportPdf';
 
 interface HeaderProps {
   organization: string;
   title: string;
+  month: string;
 }
 
-export function Header({ organization, title }: HeaderProps) {
-  const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+export function Header({ organization, title, month }: HeaderProps) {
+  const [exporting, setExporting] = useState(false);
+
   const navLinks = [
     { name: 'Overview', href: '#overview' },
     { name: 'Speed', href: '#speed' },
@@ -15,6 +19,16 @@ export function Header({ organization, title }: HeaderProps) {
     { name: 'Night Driving', href: '#night-driving' },
     { name: 'Fleet Summary', href: '#fleet-summary' },
   ];
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      const safeMonth = month.replace(/\s+/g, '-').toLowerCase();
+      await exportDashboardToPdf('dashboard-export', `fleet-report-${safeMonth}.pdf`);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <header
@@ -83,25 +97,45 @@ export function Header({ organization, title }: HeaderProps) {
           ))}
         </nav>
 
-        {/* Date Badge */}
-        <div
-          className="flex items-center shrink-0"
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            background: '#f4f4f5',
-            border: '1px solid #e4e4e7',
-          }}
-        >
-          <span
+        {/* Date + Export */}
+        <div className="flex items-center shrink-0" style={{ gap: 'var(--space-sm)' }}>
+          <div
+            className="flex items-center shrink-0"
             style={{
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              color: '#27272a',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              background: '#f4f4f5',
+              border: '1px solid #e4e4e7',
             }}
           >
-            {currentMonth}
-          </span>
+            <span
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: '#27272a',
+              }}
+            >
+              {month}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            disabled={exporting}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '6px',
+              background: exporting ? '#e4e4e7' : 'var(--primary)',
+              color: exporting ? '#71717a' : '#fff',
+              border: 'none',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: exporting ? 'wait' : 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {exporting ? 'Exporting…' : 'Export PDF'}
+          </button>
         </div>
       </div>
     </header>

@@ -159,6 +159,18 @@ function isWithinEthiopiaBounds(lat: number, lng: number): boolean {
   );
 }
 
+function getReportMonth(vehicles: Vehicle[]): string {
+  for (const v of vehicles) {
+    const dtStart = v.drives?.[0]?.dt_start;
+    if (!dtStart) continue;
+    const date = parseDateLocal(dtStart);
+    if (date && !isNaN(date.getTime())) {
+      return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+  }
+  return new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
 function getVehicleSpeed(v: Vehicle): number {
   if (!v.routes || v.routes.length === 0) return 0;
   return Math.max(...v.routes.map(r => r.speed || 0));
@@ -200,8 +212,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const speedLimit = 110; // Speed limit threshold
   const isOverspeeding = (speed: number) => speed > speedLimit;
   const continuousDrivingThreshold = 120; // 2 hours in minutes
-  const today = new Date();
-  const monthName = today.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const monthName = getReportMonth(vehicles);
 
   // Calculate total vehicles
   const totalVehicles = vehicles.length;
@@ -266,7 +277,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       }
     });
   });
-  continuousDrivingList.sort((a, b) => b.durationMinutes - a.durationMinutes);
+  continuousDrivingList.sort((a, b) => b.routeLength - a.routeLength);
 
   // Build night driving list from drives that overlap 22:00–05:00
   const nightDrivingMap = new Map<string, { vehicle: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();

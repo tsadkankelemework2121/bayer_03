@@ -82,10 +82,11 @@ export function DashboardContent() {
   }
 
   return (
-    <>
+    <div id="dashboard-export">
       <Header
         organization={data.organization}
         title={data.title}
+        month={data.month}
       />
 
       <main
@@ -122,7 +123,7 @@ export function DashboardContent() {
           <Tables data={data} />
         </section>
       </main>
-    </>
+    </div>
   );
 }
 
