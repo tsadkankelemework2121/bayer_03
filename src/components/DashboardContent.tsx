@@ -5,7 +5,6 @@ import { SpeedPanel } from './dashboard/SpeedPanel';
 import { ContinuousDrivingPanel } from './dashboard/ContinuousDrivingPanel';
 import { NightDrivingPanel } from './dashboard/NightDrivingPanel';
 import { Charts } from './dashboard/Charts';
-import { DistancePanel } from './dashboard/DistancePanel';
 import { EventsPanel } from './dashboard/EventsPanel';
 import { Tables } from './dashboard/Tables';
 
@@ -121,15 +120,11 @@ export function DashboardContent() {
           <NightDrivingPanel data={data} />
         </section>
 
-        <section id="distance" className="scroll-mt-[100px]">
-          <DistancePanel data={data} />
-        </section>
-
         <section id="events" className="scroll-mt-[100px]">
           <EventsPanel data={data} />
         </section>
 
-        <section id="violations" className="scroll-mt-[100px]">
+        <section id="fleet-summary" className="scroll-mt-[100px]">
           <Tables data={data} />
         </section>
       </main>

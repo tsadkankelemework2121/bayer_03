@@ -32,7 +32,6 @@ export interface FleetData {
   speedAnalysisData: { vehicle: string; overspeedCount: number; maxSpeed: number }[];
   complianceData: { name: string; value: number; color: string }[];
   prohibitedData: { vehicle: string; duration: number; distance: number }[];
-  distanceData: { vehicle: string; distance: number; formattedDistance: string }[];
 
   // Event Data
   totalEventsCount: number;
@@ -54,7 +53,12 @@ export interface FleetData {
     drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[];
   }[];
 
-  // Table Data
-  violationsList: { id: string; vehicle: string; overspeedCount: number; maxSpeed: number; prohibitedDuration: number }[];
-  topPerformers: { vehicle: string; score: number }[];
+  // Fleet Summary (all vehicles)
+  fleetSummaryList: {
+    id: string;
+    vehicle: string;
+    overspeedCount: number;
+    maxSpeed: number;
+    totalDistance: number;
+  }[];
 }

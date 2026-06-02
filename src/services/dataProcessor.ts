@@ -82,27 +82,22 @@ function isDriveDuringNight(dtStartStr: string, dtEndStr: string): boolean {
 }
 
 function hasNightDrive(v: Vehicle): boolean {
-  // 1. If drives exist, check overlap
-  if (v.drives && v.drives.length > 0) {
-    return v.drives.some(d => isDriveDuringNight(d.dt_start, d.dt_end));
-  }
-  
-  // 2. Fallback to routes
-  if (v.routes && v.routes.length > 0) {
-    return v.routes.some(r => (r.speed || 0) > 5 && isTimeInNightHours(r.dt_tracker));
-  }
-  
-  // 3. Fallback to tracker status
-  const speed = getVehicleSpeed(v);
-  const isMoving = speed > 5;
-  if (isMoving) {
-    const dt_tracker = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1].dt_tracker : (v.dt_tracker || v.dt_server);
-    if (dt_tracker && isTimeInNightHours(dt_tracker)) {
-      return true;
-    }
-  }
-  
-  return false;
+  // Only use drives block for night driving detection
+  if (!v.drives || v.drives.length === 0) return false;
+  return v.drives.some(d => isDriveDuringNight(d.dt_start, d.dt_end));
+}
+
+function getVehicleMaxSpeed(v: Vehicle): number {
+  // Check routes for max speed
+  const routeMax = v.routes && v.routes.length > 0
+    ? Math.max(...v.routes.map(r => r.speed || 0))
+    : 0;
+  // Check drives for max top_speed
+  const driveMax = v.drives && v.drives.length > 0
+    ? Math.max(...v.drives.map(d => d.top_speed || 0))
+    : 0;
+  // Return whichever is higher
+  return Math.max(routeMax, driveMax);
 }
 
 function parseDurationToMinutes(durationStr: string): number {
@@ -375,72 +370,35 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     { name: 'Non-Compliant', value: nonCompliantPercent, color: '#000000' },
   ];
 
-  // Build violations list - only include vehicles with violations
-  const violationsList = speedData
-    .filter(v => {
-      // Include if vehicle has any violation
-      return isOverspeeding(v.speed) || v.nightDriving || v.continuousDriving || v.isInProhibited;
-    })
-    .map((v) => {
-      const prohibitedDuration = prohibitedData.find(p => p.vehicle === v.vehicle)?.duration || 0;
-      return {
-        id: v.imei,
-        vehicle: v.vehicle,
-        overspeedCount: speedAnalysisData.find(s => s.vehicle === v.vehicle)?.overspeedCount || 0,
-        maxSpeed: Math.round(v.speed),
-        prohibitedDuration,
-      };
-    })
-    .slice(0, 5);
-
-  // Build top performers list (vehicles with lowest violations)
-  const topPerformers = vehicles
-    .map((v) => ({
-      vehicle: v.name,
-      speed: getVehicleSpeed(v),
-    }))
-    .filter(v => v.speed < speedLimit)
-    .sort((a, b) => a.speed - b.speed)
-    .slice(0, 10)
-    .map((v, index) => ({
-      vehicle: v.vehicle,
-      score: Math.max(90, 100 - (index * 1) - Math.round(v.speed / 2)),
-    }));
-
-  // Build total distance covered data
-  const rawDistanceData = vehicles
-    .map(v => {
-      let dist = 0;
-      if (v.total_distance !== undefined && v.total_distance !== null) {
-        dist = typeof v.total_distance === 'number' ? v.total_distance : parseFloat(String(v.total_distance));
-      }
-      if (dist === 0 && v.odometer) {
-        dist = parseFloat(v.odometer);
-      }
-      return {
-        vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
-        distance: isNaN(dist) ? 0 : dist,
-      };
-    });
-
-  // If all odometer counters are 0, let's simulate realistic deterministically simulated distances
-  const allZeros = rawDistanceData.every(d => d.distance === 0);
-  
-  const processedDistanceData = rawDistanceData.map((d, index) => {
-    let dist = d.distance;
-    if (allZeros) {
-      const speedObj = speedData.find(s => s.vehicle === d.vehicle);
-      const baseDistance = 300 + (index * 95);
-      const speedVariance = (speedObj?.speed || 40) * 5.2;
-      dist = Math.round(baseDistance + speedVariance);
+  // Build fleet summary list for ALL vehicles
+  const fleetSummaryList = vehicles.map(v => {
+    const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
+    
+    // Overspeed count: number of route points > 110 km/h
+    const routes = v.routes || [];
+    const overspeedCount = routes.length > 0
+      ? routes.filter(r => (r.speed || 0) > speedLimit).length
+      : 0;
+    
+    // Max speed: check both routes and drives top_speed
+    const maxSpeed = Math.round(getVehicleMaxSpeed(v));
+    
+    // Total distance: from total_distance field
+    let totalDistance = 0;
+    if (v.total_distance !== undefined && v.total_distance !== null) {
+      totalDistance = typeof v.total_distance === 'number' ? v.total_distance : parseFloat(String(v.total_distance));
     }
+    if (isNaN(totalDistance)) totalDistance = 0;
+    totalDistance = Math.round(totalDistance * 100) / 100;
     
     return {
-      vehicle: d.vehicle,
-      distance: Math.round(dist),
-      formattedDistance: `${Math.round(dist).toLocaleString()} km`,
+      id: v.imei,
+      vehicle: vName,
+      overspeedCount,
+      maxSpeed,
+      totalDistance,
     };
-  }).sort((a, b) => b.distance - a.distance);
+  }).sort((a, b) => b.maxSpeed - a.maxSpeed);
 
   // Extract all vehicle events safely
   const parsedEvents = vehicles.flatMap(v => {
@@ -495,7 +453,6 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     speedAnalysisData,
     complianceData,
     prohibitedData,
-    distanceData: processedDistanceData,
 
     // Event Data
     totalEventsCount,
@@ -505,10 +462,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     continuousDrivingList,
     nightDrivingList,
 
-    // Table Data
-    violationsList,
-    topPerformers: topPerformers.length > 0 ? topPerformers : [
-      { vehicle: 'No data', score: 0 }
-    ],
+    // Fleet Summary (all vehicles)
+    fleetSummaryList,
   };
 }
