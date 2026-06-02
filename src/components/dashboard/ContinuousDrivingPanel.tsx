@@ -46,7 +46,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
           {/* Left: Bar Chart */}
           <div className="dash-card" style={{ padding: 'var(--space-lg)' }}>
             <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
-              Route Length by Vehicle (km)
+              Distance covered
             </h3>
             <div style={{ height: '320px' }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -77,7 +77,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
           <div className="dash-card overflow-hidden">
             <div style={{ padding: 'var(--space-md) var(--space-lg)', borderBottom: '1px solid var(--border-card)' }}>
               <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Continuous Driving Log ({list.length} {list.length === 1 ? 'trip' : 'trips'})
+                Continuous Driving Log
               </h3>
             </div>
             <div className="overflow-x-auto">

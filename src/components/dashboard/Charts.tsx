@@ -38,7 +38,7 @@ export function Charts({ data }: ChartsProps) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
             {data.complianceData.map((item, index) => {
-              const vehicleCount = Math.round((item.value / 100) * data.totalVehicles);
+              const vehicleCount = item.vehicleCount;
               return (
                 <div key={index} className="flex items-center" style={{ gap: 'var(--space-md)' }}>
                   <div

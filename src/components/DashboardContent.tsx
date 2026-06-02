@@ -5,7 +5,6 @@ import { SpeedPanel } from './dashboard/SpeedPanel';
 import { ContinuousDrivingPanel } from './dashboard/ContinuousDrivingPanel';
 import { NightDrivingPanel } from './dashboard/NightDrivingPanel';
 import { Charts } from './dashboard/Charts';
-import { EventsPanel } from './dashboard/EventsPanel';
 import { Tables } from './dashboard/Tables';
 
 export function DashboardContent() {
@@ -87,7 +86,6 @@ export function DashboardContent() {
       <Header
         organization={data.organization}
         title={data.title}
-        month={data.month}
       />
 
       <main
@@ -100,31 +98,27 @@ export function DashboardContent() {
           gap: 'var(--space-xl)',
         }}
       >
-        <section id="overview" className="scroll-mt-[100px]">
+        <section id="overview" className="scroll-mt-25">
           <KPIGrid data={data} />
         </section>
 
-        <section id="speed" className="scroll-mt-[100px]">
+        <section id="speed" className="scroll-mt-25">
           <SpeedPanel data={data} />
         </section>
 
-        <section id="compliance" className="scroll-mt-[100px]">
+        <section id="compliance" className="scroll-mt-25">
           <Charts data={data} />
         </section>
 
-        <section id="continuous-driving" className="scroll-mt-[100px]">
+        <section id="continuous-driving" className="scroll-mt-25">
           <ContinuousDrivingPanel data={data} />
         </section>
 
-        <section id="night-driving" className="scroll-mt-[100px]">
+        <section id="night-driving" className="scroll-mt-25">
           <NightDrivingPanel data={data} />
         </section>
 
-        <section id="events" className="scroll-mt-[100px]">
-          <EventsPanel data={data} />
-        </section>
-
-        <section id="fleet-summary" className="scroll-mt-[100px]">
+        <section id="fleet-summary" className="scroll-mt-25">
           <Tables data={data} />
         </section>
       </main>

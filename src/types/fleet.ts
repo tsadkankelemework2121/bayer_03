@@ -14,6 +14,9 @@ export interface FleetData {
   nightDrivingVehicles: number;
   continuousDrivingVehicles: number;
   complianceViolatingVehicles: number;
+  complianceEligibleCount: number;
+  compliantVehicleCount: number;
+  nonCompliantVehicleCount: number;
 
   // Speed Monitoring
   maxSpeed: number;
@@ -30,7 +33,7 @@ export interface FleetData {
 
   // Chart Data
   speedAnalysisData: { vehicle: string; overspeedCount: number; maxSpeed: number }[];
-  complianceData: { name: string; value: number; color: string }[];
+  complianceData: { name: string; value: number; color: string; vehicleCount: number }[];
   prohibitedData: { vehicle: string; duration: number; distance: number }[];
 
   // Event Data

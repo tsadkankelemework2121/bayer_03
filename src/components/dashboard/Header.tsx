@@ -13,7 +13,6 @@ export function Header({ organization, title }: HeaderProps) {
     { name: 'Compliance', href: '#compliance' },
     { name: 'Continuous', href: '#continuous-driving' },
     { name: 'Night Driving', href: '#night-driving' },
-    { name: 'Events', href: '#events' },
     { name: 'Fleet Summary', href: '#fleet-summary' },
   ];
 

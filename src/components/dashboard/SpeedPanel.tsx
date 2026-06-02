@@ -11,7 +11,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
       <div className="section-title"><span>Speed Monitoring</span></div>
       
       {/* Metric Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
         <div className="metric-card" style={{ borderLeft: '3px solid var(--primary)' }}>
           <div className="flex items-start justify-between">
             <div>
@@ -20,17 +20,6 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 {data.maxSpeed}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km/h</span>
               </p>
               <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.maxSpeedVehicle}</span></p>
-            </div>
-          </div>
-        </div>
-        <div className="metric-card" style={{ borderLeft: '3px solid var(--primary)' }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="metric-label">Total Events Count</p>
-              <p className="metric-value">
-                {data.totalEventsCount}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>events</span>
-              </p>
-              <p className="metric-sub">Across all vehicles</p>
             </div>
           </div>
         </div>
@@ -110,8 +99,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
             <BarChart data={data.speedAnalysisData} margin={{ top: 20, right: 32, left: 16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
               <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
-              <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} tickFormatter={(value) => `${value} km/h`} />
-              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={6} tickFormatter={(value) => `${value} times`} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} />
               
               <Tooltip 
                 cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
@@ -120,8 +108,8 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               />
               <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               
-              <Bar yAxisId="left" dataKey="maxSpeed" name="Max Speed" fill="#89D329" radius={[4, 4, 0, 0]} barSize={24} />
-              <Bar yAxisId="right" dataKey="overspeedCount" name="Overspeed Count" fill="#00BCFF" radius={[4, 4, 0, 0]} barSize={24} />
+              <Bar dataKey="maxSpeed" name="Max Speed (km/h)" fill="#89D329" radius={[4, 4, 0, 0]} barSize={24} />
+              <Bar dataKey="overspeedCount" name="Overspeed Count (times)" fill="#00BCFF" radius={[4, 4, 0, 0]} barSize={24} />
             </BarChart>
           </ResponsiveContainer>
         </div>

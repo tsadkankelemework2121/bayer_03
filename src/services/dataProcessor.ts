@@ -231,9 +231,30 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isMoving && inProhibited;
   }).length;
 
-  // Calculate compliance percentages strictly based on Speed Compliance (speed > 110 km/h)
-  const nonCompliantPercent = totalVehicles > 0 ? Math.round((overspeedingVehicles / totalVehicles) * 100) : 0;
-  const compliantPercent = totalVehicles > 0 ? 100 - nonCompliantPercent : 0;
+  // Compliance: only vehicles with distance > 0; compliant = zero overspeed route points
+  const getVehicleTotalDistance = (v: Vehicle): number => {
+    let totalDistance = 0;
+    if (v.total_distance !== undefined && v.total_distance !== null) {
+      if (typeof v.total_distance === 'number') {
+        totalDistance = v.total_distance;
+      } else {
+        totalDistance = parseFloat(String(v.total_distance).replace(/,/g, ''));
+      }
+    }
+    return isNaN(totalDistance) ? 0 : totalDistance;
+  };
+  const getVehicleOverspeedCount = (v: Vehicle): number => {
+    const routes = v.routes || [];
+    return routes.length > 0 ? routes.filter(r => (r.speed || 0) > speedLimit).length : 0;
+  };
+  const complianceEligibleVehicles = vehicles.filter(v => getVehicleTotalDistance(v) > 0);
+  const compliantVehicleCount = complianceEligibleVehicles.filter(v => getVehicleOverspeedCount(v) === 0).length;
+  const nonCompliantVehicleCount = complianceEligibleVehicles.length - compliantVehicleCount;
+  const complianceEligibleCount = complianceEligibleVehicles.length;
+  const compliantPercent = complianceEligibleCount > 0
+    ? Math.round((compliantVehicleCount / complianceEligibleCount) * 100)
+    : 0;
+  const nonCompliantPercent = complianceEligibleCount > 0 ? 100 - compliantPercent : 0;
 
   // Build continuous driving list from drives block (duration > 120 min)
   const continuousDrivingList: FleetData['continuousDrivingList'] = [];
@@ -364,10 +385,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const worstProhibitedDistance = prohibitedData[0]?.distance || 0;
   const worstProhibitedDistanceVehicle = prohibitedData[0]?.vehicle || 'N/A';
 
-  // Build compliance chart data
+  // Build compliance chart data (only vehicles with total_distance > 0)
   const complianceData = [
-    { name: 'Compliant', value: compliantPercent, color: '#8ad424' },
-    { name: 'Non-Compliant', value: nonCompliantPercent, color: '#000000' },
+    { name: 'Compliant', value: compliantPercent, color: '#8ad424', vehicleCount: compliantVehicleCount },
+    { name: 'Non-Compliant', value: nonCompliantPercent, color: '#000000', vehicleCount: nonCompliantVehicleCount },
   ];
 
   // Build fleet summary list for ALL vehicles
@@ -402,7 +423,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       maxSpeed,
       totalDistance,
     };
-  }).sort((a, b) => b.maxSpeed - a.maxSpeed);
+  }).sort((a, b) => b.totalDistance - a.totalDistance);
 
   // Extract all vehicle events safely
   const parsedEvents = vehicles.flatMap(v => {
@@ -438,7 +459,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     // New KPIs for requested metrics
     nightDrivingVehicles,
     continuousDrivingVehicles,
-    complianceViolatingVehicles: overspeedingVehicles,
+    complianceViolatingVehicles: nonCompliantVehicleCount,
+    complianceEligibleCount,
+    compliantVehicleCount,
+    nonCompliantVehicleCount,
 
     // Speed Monitoring
     maxSpeed: Math.round(maxSpeed),
