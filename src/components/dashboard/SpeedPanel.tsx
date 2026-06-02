@@ -1,5 +1,5 @@
 import type { FleetData } from "../../types/fleet";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface SpeedPanelProps {
   data: FleetData;
@@ -68,9 +68,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 <Tooltip cursor={{ fill: 'rgba(137, 211, 41, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
                   formatter={(value: any) => [value, 'Speed']} />
-                <Bar dataKey="maxSpeed" name="Max Speed (km/h)" fill="url(#maxSpeedGradient)" radius={[6, 6, 0, 0]} barSize={32}>
-                  <LabelList dataKey="maxSpeed" position="top" style={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} formatter={(val: any) => `${val} km/h`} />
-                </Bar>
+                <Bar dataKey="maxSpeed" name="Max Speed (km/h)" fill="url(#maxSpeedGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -94,9 +92,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 <Tooltip cursor={{ fill: 'rgba(0, 188, 255, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
                   formatter={(value: any) => [value, 'Count']} />
-                <Bar dataKey="overspeedCount" name="Events > 110 km/h" fill="url(#speedCountGradient)" radius={[6, 6, 0, 0]} barSize={32}>
-                  <LabelList dataKey="overspeedCount" position="top" style={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} formatter={(val: any) => `${val} times`} />
-                </Bar>
+                <Bar dataKey="overspeedCount" name="Events > 110 km/h" fill="url(#speedCountGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -124,12 +120,8 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               />
               <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               
-              <Bar yAxisId="left" dataKey="maxSpeed" name="Max Speed" fill="#89D329" radius={[4, 4, 0, 0]} barSize={24}>
-                <LabelList dataKey="maxSpeed" position="top" style={{ fill: '#4b5563', fontSize: 9, fontWeight: 600 }} formatter={(val: any) => `${val} km/h`} />
-              </Bar>
-              <Bar yAxisId="right" dataKey="overspeedCount" name="Overspeed Count" fill="#00BCFF" radius={[4, 4, 0, 0]} barSize={24}>
-                <LabelList dataKey="overspeedCount" position="top" style={{ fill: '#4b5563', fontSize: 9, fontWeight: 600 }} formatter={(val: any) => `${val} times`} />
-              </Bar>
+              <Bar yAxisId="left" dataKey="maxSpeed" name="Max Speed" fill="#89D329" radius={[4, 4, 0, 0]} barSize={24} />
+              <Bar yAxisId="right" dataKey="overspeedCount" name="Overspeed Count" fill="#00BCFF" radius={[4, 4, 0, 0]} barSize={24} />
             </BarChart>
           </ResponsiveContainer>
         </div>
