@@ -88,16 +88,14 @@ function hasNightDrive(v: Vehicle): boolean {
 }
 
 function getVehicleMaxSpeed(v: Vehicle): number {
-  // Check routes for max speed
-  const routeMax = v.routes && v.routes.length > 0
-    ? Math.max(...v.routes.map(r => r.speed || 0))
-    : 0;
-  // Check drives for max top_speed
-  const driveMax = v.drives && v.drives.length > 0
-    ? Math.max(...v.drives.map(d => d.top_speed || 0))
-    : 0;
-  // Return whichever is higher
-  return Math.max(routeMax, driveMax);
+  if (!v.drives || v.drives.length === 0) return 0;
+  return Math.max(...v.drives.map(d => d.top_speed || 0));
+}
+
+function getVehicleOverspeedCount(v: Vehicle, speedLimit: number): number {
+  const drives = v.drives || [];
+  if (drives.length === 0) return 0;
+  return drives.filter(d => (d.top_speed || 0) > speedLimit).length;
 }
 
 function parseDurationToMinutes(durationStr: string): number {
@@ -231,7 +229,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isMoving && inProhibited;
   }).length;
 
-  // Compliance: only vehicles with distance > 0; compliant = zero overspeed route points
+  // Compliance: only vehicles with distance > 0; compliant = zero overspeed drives (top_speed > limit)
   const getVehicleTotalDistance = (v: Vehicle): number => {
     let totalDistance = 0;
     if (v.total_distance !== undefined && v.total_distance !== null) {
@@ -243,12 +241,8 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     }
     return isNaN(totalDistance) ? 0 : totalDistance;
   };
-  const getVehicleOverspeedCount = (v: Vehicle): number => {
-    const routes = v.routes || [];
-    return routes.length > 0 ? routes.filter(r => (r.speed || 0) > speedLimit).length : 0;
-  };
   const complianceEligibleVehicles = vehicles.filter(v => getVehicleTotalDistance(v) > 0);
-  const compliantVehicleCount = complianceEligibleVehicles.filter(v => getVehicleOverspeedCount(v) === 0).length;
+  const compliantVehicleCount = complianceEligibleVehicles.filter(v => getVehicleOverspeedCount(v, speedLimit) === 0).length;
   const nonCompliantVehicleCount = complianceEligibleVehicles.length - compliantVehicleCount;
   const complianceEligibleCount = complianceEligibleVehicles.length;
   const compliantPercent = complianceEligibleCount > 0
@@ -305,7 +299,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate speed monitoring metrics
   const speedData = vehicles
     .map(v => {
-      const speed = getVehicleSpeed(v);
+      const speed = getVehicleMaxSpeed(v);
       const isMoving = speed > 5;
       const isNightDrive = hasNightDrive(v);
       const hasContinuous = v.drives ? v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold) : false;
@@ -353,20 +347,14 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const speedAnalysisData = speedData
     .map((sd) => {
       const v = vehicles.find((veh) => veh.imei === sd.imei);
-      const routes = v?.routes || [];
-      let overspeedCount = 0;
-      if (routes.length > 0) {
-        overspeedCount = routes.filter((r) => (r.speed || 0) > 110).length;
-      } else {
-        overspeedCount = sd.speed > 110 ? 1 : 0;
-      }
+      if (!v) return null;
       return {
         vehicle: sd.vehicle,
-        overspeedCount,
-        maxSpeed: Math.round(sd.speed),
+        overspeedCount: getVehicleOverspeedCount(v, speedLimit),
+        maxSpeed: Math.round(getVehicleMaxSpeed(v)),
       };
     })
-    .filter((item) => item.overspeedCount > 0)
+    .filter((item): item is NonNullable<typeof item> => item !== null && item.overspeedCount > 0)
     .sort((a, b) => b.overspeedCount - a.overspeedCount)
     .slice(0, 10);
 
@@ -395,13 +383,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const fleetSummaryList = vehicles.map(v => {
     const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
     
-    // Overspeed count: number of route points > 110 km/h
-    const routes = v.routes || [];
-    const overspeedCount = routes.length > 0
-      ? routes.filter(r => (r.speed || 0) > speedLimit).length
-      : 0;
-    
-    // Max speed: check both routes and drives top_speed
+    const overspeedCount = getVehicleOverspeedCount(v, speedLimit);
     const maxSpeed = Math.round(getVehicleMaxSpeed(v));
     
     // Total distance: from total_distance field
