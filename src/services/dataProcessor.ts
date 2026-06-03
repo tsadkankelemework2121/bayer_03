@@ -93,9 +93,9 @@ function getVehicleMaxSpeed(v: Vehicle): number {
 }
 
 function getVehicleOverspeedCount(v: Vehicle, speedLimit: number): number {
-  const drives = v.drives || [];
-  if (drives.length === 0) return 0;
-  return drives.filter(d => (d.top_speed || 0) > speedLimit).length;
+  const routes = v.routes || [];
+  if (routes.length === 0) return 0;
+  return routes.filter(r => (r.speed || 0) > speedLimit).length;
 }
 
 function parseDurationToMinutes(durationStr: string): number {
@@ -240,7 +240,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isMoving && inProhibited;
   }).length;
 
-  // Compliance: only vehicles with distance > 0; compliant = zero overspeed drives (top_speed > limit)
+  // Compliance: only vehicles with distance > 0; compliant = zero route points with speed > limit
   const getVehicleTotalDistance = (v: Vehicle): number => {
     let totalDistance = 0;
     if (v.total_distance !== undefined && v.total_distance !== null) {
