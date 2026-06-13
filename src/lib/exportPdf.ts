@@ -49,11 +49,29 @@ function syncStylesForExport(source: Element, target: Element): void {
   }
 }
 
-function prepareClone(clonedRoot: HTMLElement, originalRoot: HTMLElement): void {
+function getEffectiveTarget(el: HTMLElement, root: HTMLElement): HTMLElement {
+  let current = el;
+  while (current.parentElement && current.parentElement !== root) {
+    const parent = current.parentElement;
+    const parentStyle = window.getComputedStyle(parent);
+    
+    const isGrid = parentStyle.display.includes('grid');
+    const isHorizontalFlex = parentStyle.display.includes('flex') && parentStyle.flexDirection !== 'column';
+    
+    if (isGrid || isHorizontalFlex) {
+      current = parent;
+    } else {
+      break;
+    }
+  }
+  return current;
+}
+
+function prepareClone(clonedRoot: HTMLElement, originalRoot: HTMLElement, accumulatedSpacerHeight: number = 0): void {
   clonedRoot.style.background = '#f5f6f8';
   clonedRoot.style.width = `${originalRoot.scrollWidth}px`;
   clonedRoot.style.height = 'auto';
-  clonedRoot.style.minHeight = `${originalRoot.scrollHeight}px`;
+  clonedRoot.style.minHeight = `${originalRoot.scrollHeight + accumulatedSpacerHeight}px`;
   clonedRoot.style.overflow = 'visible';
 
   syncStylesForExport(originalRoot, clonedRoot);
@@ -115,6 +133,53 @@ export async function exportDashboardToPdf(elementId: string, filename: string):
   await document.fonts.ready;
   await new Promise((resolve) => setTimeout(resolve, 400));
 
+  // --- Calculate Page Breaks and Spacers ---
+  const containerRect = element.getBoundingClientRect();
+  const width = element.scrollWidth;
+  const pdfWidth = 210;
+  const pdfHeight = 297;
+  const pageHeightPx = (pdfHeight / pdfWidth) * width;
+  
+  let accumulatedSpacerHeight = 0;
+
+  const targets = Array.from(element.querySelectorAll('section, .dash-card, .metric-card')) as HTMLElement[];
+  const effectiveTargets: HTMLElement[] = [];
+  
+  targets.forEach((el) => {
+    const effective = getEffectiveTarget(el, element);
+    if (!effectiveTargets.includes(effective)) {
+      effectiveTargets.push(effective);
+    }
+  });
+
+  const spacerInsertions: { elementIndex: number; height: number }[] = [];
+
+  effectiveTargets.forEach((target, index) => {
+    const rect = target.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const relativeTop = rect.top - containerRect.top;
+    const relativeBottom = rect.bottom - containerRect.top;
+    const height = rect.height;
+
+    const newTop = relativeTop + accumulatedSpacerHeight;
+    const newBottom = relativeBottom + accumulatedSpacerHeight;
+
+    const pageIndexTop = Math.floor(newTop / pageHeightPx);
+    const pageIndexBottom = Math.floor((newBottom - 1) / pageHeightPx);
+
+    if (pageIndexTop !== pageIndexBottom && height <= pageHeightPx) {
+      const spacerHeight = (pageIndexTop + 1) * pageHeightPx - newTop;
+      spacerInsertions.push({ elementIndex: index, height: spacerHeight });
+      accumulatedSpacerHeight += spacerHeight;
+    }
+  });
+
+  // Assign temporary attributes to the effective targets in the live DOM
+  effectiveTargets.forEach((target, index) => {
+    target.setAttribute('data-pdf-split-id', String(index));
+  });
+
   try {
     const canvas = await html2canvas(element, {
       scale: 2,
@@ -123,15 +188,31 @@ export async function exportDashboardToPdf(elementId: string, filename: string):
       logging: false,
       backgroundColor: '#f5f6f8',
       width: element.scrollWidth,
-      height: element.scrollHeight,
+      height: element.scrollHeight + accumulatedSpacerHeight,
       windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      windowHeight: element.scrollHeight + accumulatedSpacerHeight,
       scrollX: 0,
       scrollY: -window.scrollY,
       onclone: (_doc, clonedElement) => {
         const original = document.getElementById(EXPORT_ROOT_ID);
         if (original && clonedElement instanceof HTMLElement) {
-          prepareClone(clonedElement, original);
+          prepareClone(clonedElement, original, accumulatedSpacerHeight);
+
+          // Apply spacers to the cloned element in onclone
+          spacerInsertions.forEach((insertion) => {
+            const clonedTarget = clonedElement.querySelector(`[data-pdf-split-id="${insertion.elementIndex}"]`);
+            if (clonedTarget instanceof HTMLElement && clonedTarget.parentNode) {
+              const spacer = _doc.createElement('div');
+              spacer.style.height = `${insertion.height}px`;
+              spacer.style.width = '100%';
+              spacer.style.clear = 'both';
+              spacer.style.margin = '0';
+              spacer.style.padding = '0';
+              spacer.style.border = 'none';
+              spacer.style.background = 'transparent';
+              clonedTarget.parentNode.insertBefore(spacer, clonedTarget);
+            }
+          });
         }
       },
     });
@@ -143,5 +224,9 @@ export async function exportDashboardToPdf(elementId: string, filename: string):
     if (header instanceof HTMLElement) {
       header.style.position = prevPosition;
     }
+    // Clean up temporary attributes from the live DOM
+    effectiveTargets.forEach((target) => {
+      target.removeAttribute('data-pdf-split-id');
+    });
   }
 }
