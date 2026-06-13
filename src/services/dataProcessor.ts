@@ -39,8 +39,8 @@ function parseDateLocal(dateStr: string): Date | null {
 //   const date = parseDateLocal(dateString);
 //   if (!date || isNaN(date.getTime())) return false;
 //   const hours = date.getHours();
-//   // Night hours are 22:00 (10 PM) to 05:00 (5 AM)
-//   return hours >= 22 || hours < 5;
+//   // Night hours are 22:00 (10 PM) to 04:00 (4 AM)
+//   return hours >= 22 || hours < 4;
 // }
 
 function isDriveDuringNight(dtStartStr: string, dtEndStr: string): boolean {
@@ -67,7 +67,7 @@ function isDriveDuringNight(dtStartStr: string, dtEndStr: string): boolean {
     
     const nightStart = new Date(y, m, d, 22, 0, 0).getTime();
     const nextDay = new Date(y, m, d + 1);
-    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 5, 0, 0).getTime();
+    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 4, 0, 0).getTime();
     
     const overlapStart = Math.max(tStart, nightStart);
     const overlapEnd = Math.min(tEnd, nightEnd);
@@ -136,7 +136,7 @@ function calculateNightOverlapMinutes(dtStartStr: string, dtEndStr: string): num
 
     const nightStart = new Date(y, m, d, 22, 0, 0).getTime();
     const nextDay = new Date(y, m, d + 1);
-    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 5, 0, 0).getTime();
+    const nightEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 4, 0, 0).getTime();
 
     const overlapStart = Math.max(tStart, nightStart);
     const overlapEnd = Math.min(tEnd, nightEnd);
@@ -223,7 +223,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return isOverspeeding(speed);
   }).length;
 
-  // Calculate night driving vehicles (driving during night hours: 22:00 to 05:00)
+  // Calculate night driving vehicles (driving during night hours: 22:00 to 04:00)
   const nightDrivingVehicles = vehicles.filter(v => hasNightDrive(v)).length;
 
   // Calculate continuous driving vehicles (any drive with duration > 120 min from drives block)
@@ -279,7 +279,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   });
   continuousDrivingList.sort((a, b) => b.routeLength - a.routeLength);
 
-  // Build night driving list from drives that overlap 22:00–05:00
+  // Build night driving list from drives that overlap 22:00–04:00
   const nightDrivingMap = new Map<string, { vehicle: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();
   vehicles.forEach(v => {
     if (!v.drives || v.drives.length === 0) return;

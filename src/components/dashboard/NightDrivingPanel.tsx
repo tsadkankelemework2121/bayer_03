@@ -27,7 +27,7 @@ export function NightDrivingPanel({ data }: NightDrivingPanelProps) {
 
   return (
     <div className="animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
-      <div className="section-title"><span>Night Driving (22:00 – 05:00)</span></div>
+      <div className="section-title"><span>Night Driving (22:00 – 04:00)</span></div>
 
       {list.length === 0 ? (
         <div className="dash-card" style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--text-muted)' }}>
