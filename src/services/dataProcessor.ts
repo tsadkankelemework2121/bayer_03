@@ -440,7 +440,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   return {
     title: 'Fleet Safety & Compliance Report',
     month: monthName,
-    organization: 'Bayer East Africa',
+    organization: 'Bayer Life Science Ethiopia PLC',
 
     // Core KPIs
     totalVehicles,
