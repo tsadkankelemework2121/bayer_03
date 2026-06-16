@@ -262,14 +262,17 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const nonCompliantPercent = complianceEligibleCount > 0 ? 100 - compliantPercent : 0;
 
   // Build continuous driving list from drives block (duration > 120 min AND distance > 50 km)
-  const continuousDrivingList: FleetData['continuousDrivingList'] = [];
+  const continuousDrivingMap = new Map<string, { vehicle: string; drives: { duration: string; durationMinutes: number; routeLength: number }[] }>();
   vehicles.forEach(v => {
     if (!v.drives || v.drives.length === 0) return;
+    const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
     v.drives.forEach(d => {
       const mins = parseDurationToMinutes(d.duration);
       if (mins > continuousDrivingThreshold && (d.route_length || 0) > 50) {
-        continuousDrivingList.push({
-          vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
+        if (!continuousDrivingMap.has(v.imei)) {
+          continuousDrivingMap.set(v.imei, { vehicle: vName, drives: [] });
+        }
+        continuousDrivingMap.get(v.imei)!.drives.push({
           duration: d.duration,
           durationMinutes: Math.round(mins),
           routeLength: d.route_length || 0,
@@ -277,7 +280,14 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       }
     });
   });
-  continuousDrivingList.sort((a, b) => b.routeLength - a.routeLength);
+
+  const continuousDrivingList: FleetData['continuousDrivingList'] = Array.from(continuousDrivingMap.values()).map(entry => ({
+    vehicle: entry.vehicle,
+    driveCount: entry.drives.length,
+    totalDurationMinutes: entry.drives.reduce((sum, d) => sum + d.durationMinutes, 0),
+    totalRouteLength: entry.drives.reduce((sum, d) => sum + d.routeLength, 0),
+    drives: entry.drives,
+  })).sort((a, b) => b.totalRouteLength - a.totalRouteLength);
 
   // Build night driving list from drives that overlap 22:00–04:00
   const nightDrivingMap = new Map<string, { vehicle: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();

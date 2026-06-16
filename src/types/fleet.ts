@@ -43,9 +43,14 @@ export interface FleetData {
   // Continuous Driving Data (drives with duration > 120 min and distance > 50 km)
   continuousDrivingList: {
     vehicle: string;
-    duration: string;
-    durationMinutes: number;
-    routeLength: number;
+    driveCount: number;
+    totalDurationMinutes: number;
+    totalRouteLength: number;
+    drives: {
+      duration: string;
+      durationMinutes: number;
+      routeLength: number;
+    }[];
   }[];
 
   // Night Driving Data (drives overlapping 22:00–04:00)

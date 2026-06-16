@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FleetData } from "../../types/fleet";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
 
@@ -7,6 +8,7 @@ interface ContinuousDrivingPanelProps {
 
 export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
   const list = data.continuousDrivingList || [];
+  const [expandedVehicles, setExpandedVehicles] = useState<Record<string, boolean>>({});
 
   const formatDuration = (mins: number) => {
     const hours = Math.floor(mins / 60);
@@ -14,23 +16,21 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
     return hours === 0 ? `${remaining}m` : `${hours}h ${remaining}m`;
   };
 
-  // Chart data: aggregate by vehicle (sum route_length per vehicle)
-  const chartMap = new Map<string, { vehicle: string; routeLength: number; durationMinutes: number }>();
-  list.forEach(item => {
-    if (chartMap.has(item.vehicle)) {
-      const existing = chartMap.get(item.vehicle)!;
-      existing.routeLength += item.routeLength;
-      existing.durationMinutes += item.durationMinutes;
-    } else {
-      chartMap.set(item.vehicle, {
-        vehicle: item.vehicle,
-        routeLength: Math.round(item.routeLength * 100) / 100,
-        durationMinutes: item.durationMinutes,
-      });
-    }
-  });
-  const chartData = Array.from(chartMap.values())
-    .sort((a, b) => b.routeLength - a.routeLength)
+  const toggleVehicle = (vehicle: string) => {
+    setExpandedVehicles(prev => ({
+      ...prev,
+      [vehicle]: !prev[vehicle]
+    }));
+  };
+
+  // Chart data: aggregate top 10 vehicles by totalRouteLength
+  const chartData = [...list]
+    .sort((a, b) => b.totalRouteLength - a.totalRouteLength)
+    .map(item => ({
+      vehicle: item.vehicle,
+      routeLength: Math.round(item.totalRouteLength * 100) / 100,
+      durationMinutes: item.totalDurationMinutes,
+    }))
     .slice(0, 10);
 
   return (
@@ -90,21 +90,96 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {list.map((item, idx) => (
-                    <tr key={`${item.vehicle}-${idx}`}>
-                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.vehicle}</td>
-                      <td>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          {item.duration} ({formatDuration(item.durationMinutes)})
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {item.routeLength.toFixed(2)} km
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {list.flatMap((item, idx) => {
+                    const isExpanded = !!expandedVehicles[item.vehicle];
+                    return [
+                      <tr
+                        key={`${item.vehicle}-parent-${idx}`}
+                        onClick={() => toggleVehicle(item.vehicle)}
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        className={isExpanded ? 'bg-[var(--primary-light)]' : ''}
+                      >
+                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 'var(--space-xs)',
+                            userSelect: 'none'
+                          }}>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '12px',
+                              textAlign: 'center',
+                              fontSize: '0.75rem',
+                              color: 'var(--text-muted)',
+                              transition: 'transform 0.15s ease',
+                              transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                              marginRight: '4px'
+                            }}>
+                              ▶
+                            </span>
+                            {item.vehicle}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            {formatDuration(item.totalDurationMinutes)} ({item.driveCount} drive{item.driveCount > 1 ? 's' : ''})
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {item.totalRouteLength.toFixed(2)} km
+                          </span>
+                        </td>
+                      </tr>,
+                      isExpanded && (
+                        <tr key={`${item.vehicle}-child-${idx}`} style={{ background: 'var(--bg-page)' }}>
+                          <td colSpan={3} style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+                            <div style={{
+                              paddingLeft: 'var(--space-md)',
+                              borderLeft: '3px solid var(--primary)',
+                              animation: 'fadeIn 0.25s ease-out both'
+                            }}>
+                              <h4 style={{
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                                color: 'var(--text-muted)',
+                                marginBottom: 'var(--space-sm)'
+                              }}>
+                                Detailed Continuous Drives
+                              </h4>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
+                                    <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Drive</th>
+                                    <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Duration</th>
+                                    <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Distance</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {item.drives.map((drive, dIdx) => (
+                                    <tr key={dIdx} style={{ borderBottom: dIdx < item.drives.length - 1 ? '1px solid var(--divider)' : 'none' }}>
+                                      <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>
+                                        Drive #{dIdx + 1}
+                                      </td>
+                                      <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>
+                                        {drive.duration} ({formatDuration(drive.durationMinutes)})
+                                      </td>
+                                      <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                        {drive.routeLength.toFixed(2)} km
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    ];
+                  })}
                 </tbody>
               </table>
             </div>
