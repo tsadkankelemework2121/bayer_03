@@ -40,7 +40,7 @@ export interface FleetData {
   totalEventsCount: number;
   eventsList: { id: string; vehicle: string; type: string; time: string; details: string }[];
 
-  // Continuous Driving Data (drives with duration > 120 min)
+  // Continuous Driving Data (drives with duration > 120 min and distance > 50 km)
   continuousDrivingList: {
     vehicle: string;
     duration: string;

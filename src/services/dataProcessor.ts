@@ -226,10 +226,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   // Calculate night driving vehicles (driving during night hours: 22:00 to 04:00)
   const nightDrivingVehicles = vehicles.filter(v => hasNightDrive(v)).length;
 
-  // Calculate continuous driving vehicles (any drive with duration > 120 min from drives block)
+  // Calculate continuous driving vehicles (any drive with duration > 120 min AND distance > 50 km from drives block)
   const continuousDrivingVehicles = vehicles.filter(v => {
     if (!v.drives || v.drives.length === 0) return false;
-    return v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold);
+    return v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold && (d.route_length || 0) > 50);
   }).length;
 
   // Calculate geofence/prohibited zone violations
@@ -261,13 +261,13 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     : 0;
   const nonCompliantPercent = complianceEligibleCount > 0 ? 100 - compliantPercent : 0;
 
-  // Build continuous driving list from drives block (duration > 120 min)
+  // Build continuous driving list from drives block (duration > 120 min AND distance > 50 km)
   const continuousDrivingList: FleetData['continuousDrivingList'] = [];
   vehicles.forEach(v => {
     if (!v.drives || v.drives.length === 0) return;
     v.drives.forEach(d => {
       const mins = parseDurationToMinutes(d.duration);
-      if (mins > continuousDrivingThreshold) {
+      if (mins > continuousDrivingThreshold && (d.route_length || 0) > 50) {
         continuousDrivingList.push({
           vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
           duration: d.duration,
@@ -313,7 +313,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       const speed = getVehicleMaxSpeed(v);
       const isMoving = speed > 5;
       const isNightDrive = hasNightDrive(v);
-      const hasContinuous = v.drives ? v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold) : false;
+      const hasContinuous = v.drives ? v.drives.some(d => parseDurationToMinutes(d.duration) > continuousDrivingThreshold && (d.route_length || 0) > 50) : false;
       
       const lastRoutePoint = v.routes && v.routes.length > 0 ? v.routes[v.routes.length - 1] : null;
       const latitude = lastRoutePoint ? parseFloat(lastRoutePoint.lat || '0') : parseFloat(v.lat || '0');

@@ -35,11 +35,11 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
 
   return (
     <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-      <div className="section-title"><span>Continuous Driving (&gt; 2 Hours)</span></div>
+      <div className="section-title"><span>Continuous Driving (&gt; 2 Hours &amp; &gt; 50 km)</span></div>
 
       {list.length === 0 ? (
         <div className="dash-card" style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>No continuous driving incidents detected (threshold: 2 hours).</p>
+          <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>No continuous driving incidents detected (threshold: 2 hours &amp; 50 km).</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'var(--space-md)' }}>
