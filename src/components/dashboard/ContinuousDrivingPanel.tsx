@@ -123,7 +123,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                         </td>
                         <td>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            {formatDuration(item.totalDurationMinutes)} ({item.driveCount} drive{item.driveCount > 1 ? 's' : ''})
+                            {formatDuration(item.totalDurationMinutes)} ({item.driveCount} trip{item.driveCount > 1 ? 's' : ''})
                           </span>
                         </td>
                         <td>
