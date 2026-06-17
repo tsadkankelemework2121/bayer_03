@@ -153,7 +153,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                                 <thead>
                                   <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
-                                    <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Drive</th>
+                                    <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Trip</th>
                                     <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Duration</th>
                                     <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.72rem' }}>Distance</th>
                                   </tr>
@@ -162,7 +162,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                                   {item.drives.map((drive, dIdx) => (
                                     <tr key={dIdx} style={{ borderBottom: dIdx < item.drives.length - 1 ? '1px solid var(--divider)' : 'none' }}>
                                       <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>
-                                        Drive #{dIdx + 1}
+                                        Trip #{dIdx + 1}
                                       </td>
                                       <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>
                                         {drive.duration} ({formatDuration(drive.durationMinutes)})
