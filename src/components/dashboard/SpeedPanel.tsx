@@ -20,6 +20,7 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 {data.maxSpeed}<span style={{ fontSize: '0.8rem', fontWeight: 600, marginLeft: '4px', color: 'var(--text-muted)' }}>km/h</span>
               </p>
               <p className="metric-sub">Vehicle: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.maxSpeedVehicle}</span></p>
+              <p className="metric-sub">Driver: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.maxSpeedDriver}</span></p>
             </div>
           </div>
         </div>
@@ -54,9 +55,12 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
                 <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} tickFormatter={(value) => `${value} km/h`} />
-                <Tooltip cursor={{ fill: 'rgba(137, 211, 41, 0.06)' }}
+                 <Tooltip cursor={{ fill: 'rgba(137, 211, 41, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                  formatter={(value: any) => [value, 'Speed']} />
+                  formatter={(value: any, _name: any, props: any) => [
+                    `${value} km/h (Driver: ${props.payload?.driver || 'Unknown Driver'})`,
+                    'Max Speed'
+                  ]} />
                 <Bar dataKey="maxSpeed" name="Max Speed (km/h)" fill="url(#maxSpeedGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
@@ -78,9 +82,12 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e7ec" />
                 <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} tickFormatter={(value) => `${value} times`} />
-                <Tooltip cursor={{ fill: 'rgba(0, 188, 255, 0.06)' }}
+                 <Tooltip cursor={{ fill: 'rgba(0, 188, 255, 0.06)' }}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                  formatter={(value: any) => [value, 'Count']} />
+                  formatter={(value: any, _name: any, props: any) => [
+                    `${value} times (Driver: ${props.payload?.driver || 'Unknown Driver'})`,
+                    'Overspeed Count'
+                  ]} />
                 <Bar dataKey="overspeedCount" name="Events > 110 km/h" fill="url(#speedCountGradient)" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
@@ -101,10 +108,13 @@ export function SpeedPanel({ data }: SpeedPanelProps) {
               <XAxis dataKey="vehicle" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={8} />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dx={-6} />
               
-              <Tooltip 
+               <Tooltip 
                 cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e4e7ec', color: '#000', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', fontSize: '12px' }}
-                formatter={(value: any, name: any) => [value, name]}
+                formatter={(value: any, name: any, props: any) => [
+                  `${value} ${name.includes('Speed') ? 'km/h' : 'times'} (Driver: ${props.payload?.driver || 'Unknown Driver'})`,
+                  name
+                ]}
               />
               <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               

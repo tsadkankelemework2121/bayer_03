@@ -21,6 +21,7 @@ export function EventsPanel({ data }: EventsPanelProps) {
               <thead>
                 <tr>
                   <th>Vehicle</th>
+                  <th>Driver</th>
                   <th>Event Type</th>
                   <th>Timestamp</th>
                   <th>Details</th>
@@ -30,6 +31,7 @@ export function EventsPanel({ data }: EventsPanelProps) {
                 {events.map((event) => (
                   <tr key={event.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{event.vehicle}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{event.driver}</td>
                     <td>
                       <span className="risk-badge risk-badge-medium" style={{ fontSize: '0.72rem' }}>
                         {event.type}

@@ -262,15 +262,16 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   const nonCompliantPercent = complianceEligibleCount > 0 ? 100 - compliantPercent : 0;
 
   // Build continuous driving list from drives block (duration > 120 min AND distance > 50 km)
-  const continuousDrivingMap = new Map<string, { vehicle: string; drives: { duration: string; durationMinutes: number; routeLength: number }[] }>();
+  const continuousDrivingMap = new Map<string, { vehicle: string; driver: string; drives: { duration: string; durationMinutes: number; routeLength: number }[] }>();
   vehicles.forEach(v => {
     if (!v.drives || v.drives.length === 0) return;
     const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
+    const driver = v.driver || 'Unknown Driver';
     v.drives.forEach(d => {
       const mins = parseDurationToMinutes(d.duration);
       if (mins > continuousDrivingThreshold && (d.route_length || 0) > 50) {
         if (!continuousDrivingMap.has(v.imei)) {
-          continuousDrivingMap.set(v.imei, { vehicle: vName, drives: [] });
+          continuousDrivingMap.set(v.imei, { vehicle: vName, driver, drives: [] });
         }
         continuousDrivingMap.get(v.imei)!.drives.push({
           duration: d.duration,
@@ -283,6 +284,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
 
   const continuousDrivingList: FleetData['continuousDrivingList'] = Array.from(continuousDrivingMap.values()).map(entry => ({
     vehicle: entry.vehicle,
+    driver: entry.driver,
     driveCount: entry.drives.length,
     totalDurationMinutes: entry.drives.reduce((sum, d) => sum + d.durationMinutes, 0),
     totalRouteLength: entry.drives.reduce((sum, d) => sum + d.routeLength, 0),
@@ -290,16 +292,17 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   })).sort((a, b) => b.totalRouteLength - a.totalRouteLength);
 
   // Build night driving list from drives that overlap 22:00–04:00
-  const nightDrivingMap = new Map<string, { vehicle: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();
+  const nightDrivingMap = new Map<string, { vehicle: string; driver: string; drives: { dtStart: string; dtEnd: string; overlapMinutes: number }[] }>();
   vehicles.forEach(v => {
     if (!v.drives || v.drives.length === 0) return;
     const vName = v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`;
+    const driver = v.driver || 'Unknown Driver';
     v.drives.forEach(d => {
       if (isDriveDuringNight(d.dt_start, d.dt_end)) {
         const overlap = calculateNightOverlapMinutes(d.dt_start, d.dt_end);
         if (overlap > 0) {
           if (!nightDrivingMap.has(v.imei)) {
-            nightDrivingMap.set(v.imei, { vehicle: vName, drives: [] });
+            nightDrivingMap.set(v.imei, { vehicle: vName, driver, drives: [] });
           }
           nightDrivingMap.get(v.imei)!.drives.push({
             dtStart: d.dt_start,
@@ -312,6 +315,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
   });
   const nightDrivingList: FleetData['nightDrivingList'] = Array.from(nightDrivingMap.values()).map(entry => ({
     vehicle: entry.vehicle,
+    driver: entry.driver,
     nightDriveCount: entry.drives.length,
     totalNightMinutes: entry.drives.reduce((sum, d) => sum + d.overlapMinutes, 0),
     drives: entry.drives,
@@ -331,6 +335,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
 
       return {
         vehicle: v.name,
+        driver: v.driver || 'Unknown Driver',
         imei: v.imei,
         speed,
         isMoving,
@@ -345,10 +350,12 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     .sort((a, b) => b.speed - a.speed);
 
   const maxSpeedVehicle = speedData[0]?.vehicle || 'N/A';
+  const maxSpeedDriver = speedData[0]?.driver || 'N/A';
   const maxSpeed = speedData[0]?.speed || 0;
 
   // Find top violator (vehicle with most violations across all categories)
   let topViolator = maxSpeedVehicle;
+  let topViolatorDriver = maxSpeedDriver;
   let topViolatorEvents = 0;
   
   speedData.forEach(v => {
@@ -361,6 +368,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     if (violations > topViolatorEvents) {
       topViolatorEvents = violations;
       topViolator = v.vehicle;
+      topViolatorDriver = v.driver;
     }
   });
 
@@ -371,6 +379,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       if (!v) return null;
       return {
         vehicle: sd.vehicle,
+        driver: sd.driver,
         overspeedCount: getVehicleOverspeedCount(v, speedLimit),
         maxSpeed: Math.round(getVehicleMaxSpeed(v)),
       };
@@ -422,6 +431,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     return {
       id: v.imei,
       vehicle: vName,
+      driver: v.driver || 'Unknown Driver',
       overspeedCount,
       maxSpeed,
       totalDistance,
@@ -438,6 +448,7 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
       return {
         id: `${v.imei}-${idx}-${time}`,
         vehicle: v.name || v.plate || `Vehicle ${v.imei.slice(-4)}`,
+        driver: v.driver || 'Unknown Driver',
         type,
         time,
         details,
@@ -470,8 +481,10 @@ export function processFleetData(vehicles: Vehicle[]): FleetData {
     // Speed Monitoring
     maxSpeed: Math.round(maxSpeed),
     maxSpeedVehicle,
+    maxSpeedDriver,
     speedLimit,
     topViolator,
+    topViolatorDriver,
     topViolatorEvents,
 
     // Prohibited Driving

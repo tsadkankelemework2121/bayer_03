@@ -85,6 +85,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                 <thead>
                   <tr>
                     <th>Vehicle</th>
+                    <th>Driver</th>
                     <th>Duration</th>
                     <th>Route Length</th>
                   </tr>
@@ -121,6 +122,9 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                             {item.vehicle}
                           </span>
                         </td>
+                        <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>
+                          {item.driver}
+                        </td>
                         <td>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                             {formatDuration(item.totalDurationMinutes)} ({item.driveCount} trip{item.driveCount > 1 ? 's' : ''})
@@ -134,7 +138,7 @@ export function ContinuousDrivingPanel({ data }: ContinuousDrivingPanelProps) {
                       </tr>,
                       isExpanded && (
                         <tr key={`${item.vehicle}-child-${idx}`} style={{ background: 'var(--bg-page)' }}>
-                          <td colSpan={3} style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+                          <td colSpan={4} style={{ padding: 'var(--space-md) var(--space-lg)' }}>
                             <div style={{
                               paddingLeft: 'var(--space-md)',
                               borderLeft: '3px solid var(--primary)',

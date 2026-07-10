@@ -16,6 +16,7 @@ export function Tables({ data }: TablesProps) {
             <thead>
               <tr>
                 <th>Vehicle</th>
+                <th>Driver</th>
                 <th>Overspeed Count</th>
                 <th>Max Speed</th>
                 <th>Total Distance</th>
@@ -25,6 +26,7 @@ export function Tables({ data }: TablesProps) {
               {list.map((row) => (
                 <tr key={row.id}>
                   <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.vehicle}</td>
+                  <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{row.driver}</td>
                   <td style={{ fontWeight: 500 }}>
                     {row.overspeedCount > 0 ? (
                       <span style={{ color: '#d32f2f', fontWeight: 600 }}>{row.overspeedCount}</span>

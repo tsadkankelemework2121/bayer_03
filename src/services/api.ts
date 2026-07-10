@@ -59,6 +59,7 @@ export interface Vehicle {
   stops?: Stop[];
   events?: any[];
   routes?: RoutePoint[];
+  driver?: string;
 }
 
 const API_URL = 'https://mellatech.et/et/api/api.php?api=user&ver=1.0&key=148259A8D255BD7CA1FA5D2C5E34E819&cmd=GET_USER_OBJECTS_ROUTE';
@@ -100,6 +101,7 @@ export const fetchVehicles = async (): Promise<Vehicle[]> => {
           stops: val.stops || [],
           events: val.events || [],
           routes: val.routes || [],
+          driver: val.driver || 'Unknown Driver',
         };
       });
     }
